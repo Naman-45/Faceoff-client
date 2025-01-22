@@ -1,0 +1,41 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ChallengeStatus {
+  PENDING
+  ACCEPTED
+  COMPLETED
+  CANCELLED
+}
+
+enum ChallengeType {
+  PUBLIC
+  PRIVATE
+}
+
+model Challenge {
+  id                String          @id @default(uuid())
+  challengeId       String          @unique
+  wagerAmount       Decimal         @map("wager_amount") @db.Decimal(10, 2)
+  creatorUsername   String          @map("creator_username")
+  creatorPublicKey  String          @map("creator_public_key")
+  opponentUsername  String?          @map("opponent_username")
+  opponentPublicKey  String?          @map("opponent_public_key")
+  status            ChallengeStatus @default(PENDING)
+  challengeType     ChallengeType   @default(PUBLIC) // New field for challenge type
+  createdAt         DateTime        @default(now()) @map("created_at")
+
+  @@map("challenges")
+}
