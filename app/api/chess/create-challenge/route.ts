@@ -12,7 +12,6 @@ import dotenv from 'dotenv';
 import { Connection, PublicKey, Transaction, LAMPORTS_PER_SOL, clusterApiUrl, ComputeBudgetProgram } from "@solana/web3.js";
 import { FaceoffProgram } from "../faceoff_program";
 import { BN, Program } from "@coral-xyz/anchor";
-import { SYSTEM_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/native/system";
 
 const IDL = require('@/app/api/chess/faceoff_program.json');
 
@@ -22,7 +21,6 @@ const headers = createActionHeaders();
 
 export const GET = async () => {
   try {
-    // const requestUrl = new URL(req.url);
     const baseHref = process.env.baseHref ?? "http://localhost:3000";
 
     const actions: LinkedAction[] = [
@@ -100,8 +98,6 @@ export const POST = async (req: Request) => {
     const username = searchParams.get('username');
     const challengeType = searchParams.get('challengeType');
 
-    // body will contain the user's `amount` and `username` input from the user
-    console.log("body:", body);
 
     const challengeId = crypto.randomBytes(16).toString('hex');
 
@@ -133,10 +129,10 @@ export const POST = async (req: Request) => {
     }).instruction();
 
     const computeBudgetInstruction = ComputeBudgetProgram.setComputeUnitLimit({
-      units: 1_000_000, // Increase compute limit
+      units: 1_000_000,
     });
     const computePriceInstruction = ComputeBudgetProgram.setComputeUnitPrice({
-      microLamports: 1_000_000, // Increase compute limit
+      microLamports: 10_000_000, 
     });
 
     const blockhash = await connection.getLatestBlockhash();
@@ -145,7 +141,7 @@ export const POST = async (req: Request) => {
       feePayer: signer,
       blockhash: blockhash.blockhash,
       lastValidBlockHeight: blockhash.lastValidBlockHeight,
-    }).add(instruction, computeBudgetInstruction, computePriceInstruction)
+    }).add(computeBudgetInstruction, computePriceInstruction, instruction)
 
     const payload: ActionPostResponse = await createPostResponse({
       fields: {

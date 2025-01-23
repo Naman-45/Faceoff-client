@@ -35,8 +35,6 @@ import {
   export const POST = async (req: Request) => {
     try {
 
-    //   const url = new URL(req.url);
-  
       /**
        * we can type the `body.data` to what fields we expect from the GET response above
        */
@@ -47,9 +45,6 @@ import {
       const challengeId = searchParams.get('challengeId');
       const amount = searchParams.get('amount');
       const username = searchParams.get('username');
-  
-      // body will contain the user's `account` , `amount` , `username` and `challangeId` input from the user
-      console.log("body:", body);
   
       let account: PublicKey;
       try {
@@ -69,14 +64,31 @@ import {
       const connection = new Connection(
         process.env.SOLANA_RPC! || clusterApiUrl("devnet"),
       );
-  
-      /**
-       * todo: do we need to manually re-confirm the transaction?
-       * todo: do we need to perform multiple confirmation attempts
-       */
-  
+
+      const MAX_RETRIES = 5;
+      const RETRY_DELAY = 2000; // 2 seconds
+      
+      const waitForConfirmation = async (signature: string) => {
+        for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+          try {
+            const status = await connection.getSignatureStatus(signature, {
+              searchTransactionHistory: true
+            });
+      
+            if (status.value?.confirmationStatus === 'confirmed' || 
+                status.value?.confirmationStatus === 'finalized') {
+              return status;
+            }
+      
+            await new Promise(resolve => setTimeout(resolve, RETRY_DELAY * attempt));
+          } catch (error) {
+            if (attempt === MAX_RETRIES) throw error;
+          }
+        }
+      };
+
       try {
-        const status = await connection.getSignatureStatus(signature);
+        const status = await waitForConfirmation(signature);
   
         console.log("signature status:", status);
   
@@ -126,7 +138,13 @@ import {
 
       const baseHref = process.env.baseHref ?? "http://localhost:3000"
 
-      await axios.post(`${baseHref}/api/chess/db-queries`,challengeJson);
+      await axios.post(`${baseHref}/api/chess/db-queries`, {
+        params : {challengeId}
+      },{
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
   
       /**
        * returning a `CompletedAction` allows you to update the

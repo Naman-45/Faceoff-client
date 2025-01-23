@@ -37,20 +37,11 @@ import {
   export const POST = async (req: Request) => {
     try {
 
-    //   const url = new URL(req.url);
-  
-      /**
-       * we can type the `body.data` to what fields we expect from the GET response above
-       */
       const body: NextActionPostRequest = await req.json();
-
 
       const { searchParams } = new URL(req.url);
       const challengeId = searchParams.get('challengeId') ?? '';
       const username = searchParams.get('username');
-  
-      // body will contain the user's `account` , `amount` , `username` and `challangeId` input from the user
-      console.log("body:", body);
   
       let account: PublicKey;
       try {
@@ -68,18 +59,11 @@ import {
       }
   
       const connection = new Connection(
-        process.env.SOLANA_RPC! || clusterApiUrl("devnet"),
+        process.env.SOLANA_RPC ?? clusterApiUrl("devnet"),
       );
-  
-      /**
-       * todo: do we need to manually re-confirm the transaction?
-       * todo: do we need to perform multiple confirmation attempts
-       */
   
       try {
         const status = await connection.getSignatureStatus(signature);
-  
-        console.log("signature status:", status);
   
         if (!status) throw "Unknown signature status";
   

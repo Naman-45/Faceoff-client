@@ -1,4 +1,4 @@
-import { BN, Program } from "@coral-xyz/anchor";
+import { Program } from "@coral-xyz/anchor";
 import { 
     ActionError, 
     ActionGetResponse, 
@@ -7,10 +7,9 @@ import {
     createActionHeaders, 
     createPostResponse 
 } from "@solana/actions";
-import { Connection, LAMPORTS_PER_SOL, PublicKey, Transaction } from "@solana/web3.js";
+import { clusterApiUrl, Connection, PublicKey, Transaction } from "@solana/web3.js";
 import axios from "axios";
 import { FaceoffProgram } from "../faceoff_program";
-import { SYSTEM_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/native/system";
 
 const ChessWebAPI = require('chess-web-api');
 
@@ -81,10 +80,8 @@ export const POST = async (req: Request) => {
       // Access the data from the response
       const challenge = response.data;
 
-      const amount = challenge.wagerAmount;
       const opponentUsername = challenge.opponentUsername;
       const creatorUsername = challenge.creatorUsername;
-      const createdAt = challenge.createdAt;
       const createdAtUnix = Math.floor(new Date(challenge.createdAt).getTime() / 1000);
       
       const currentDate = new Date();
@@ -152,7 +149,7 @@ export const POST = async (req: Request) => {
         fields: {
             type: "transaction",
           transaction,
-          message: "Post this memo on-chain",
+          message: "Settle wager!",
           links: {
             next: {
               type: "post",

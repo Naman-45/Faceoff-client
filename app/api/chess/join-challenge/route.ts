@@ -17,7 +17,6 @@ import dotenv from 'dotenv'
 import { FaceoffProgram } from "../faceoff_program";
 import { BN, Program } from "@coral-xyz/anchor";
 import axios from "axios";
-import { SYSTEM_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/native/system";
 
 const IDL = require('@/app/api/chess/faceoff_program.json');
 
@@ -100,10 +99,7 @@ export const POST = async (req: Request) => {
       const challenge = response.data;
 
       const amount = challenge.wagerAmount;
-  
-      // body will contain the user's `account` and `memo` input from the user
-      console.log("body:", body);
-  
+
       let signer: PublicKey;
       try {
         signer = new PublicKey(body.account);
@@ -135,7 +131,7 @@ export const POST = async (req: Request) => {
         fields: {
             type: "transaction",
           transaction,
-          message: "Post this memo on-chain",
+          message: "Join challenge!",
           links: {
             next: {
               type: "post",
