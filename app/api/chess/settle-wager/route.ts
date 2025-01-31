@@ -35,8 +35,8 @@ export const GET = async (req: Request) => {
       links: {
         actions: [{
             type: "transaction",
-            label: "Join",
-            href: `${baseHref}/api/chess/settle-wager?challengeid=${challengeId}`
+            label: "Settle",
+            href: `${baseHref}/api/chess/settle-wager?challengeId=${challengeId}`
         }]
       }
     };
@@ -101,7 +101,7 @@ export const POST = async (req: Request) => {
           });
           actualgame = games[0];
         }, function(err: any) {
-          console.error(err);
+          throw `error while getting games from chess api - ${err}`
         });
 
         //@ts-ignore

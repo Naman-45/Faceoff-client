@@ -1,3 +1,4 @@
+import { ChallengeType } from "@prisma/client";
 import {
     createActionHeaders,
     NextActionPostRequest,
@@ -45,7 +46,8 @@ import {
       const challengeId = searchParams.get('challengeId');
       const amount = searchParams.get('amount');
       const username = searchParams.get('username');
-  
+      const challengeType = searchParams.get('challengeType');
+
       let account: PublicKey;
       try {
         account = new PublicKey(body.account);
@@ -111,17 +113,17 @@ import {
         throw "Unable to confirm the provided signature";
       }
   
-      /**
-       * !TAKE CAUTION!
-       *
-       * since any client side request can access this public endpoint,
-       * a malicious actor could provide a valid signature that does NOT
-       * perform the previous action's transaction.
-       *
-       * todo: validate this transaction is what you expected the user to perform in the previous step
-       */
+      // /**
+      //  * !TAKE CAUTION!
+      //  *
+      //  * since any client side request can access this public endpoint,
+      //  * a malicious actor could provide a valid signature that does NOT
+      //  * perform the previous action's transaction.
+      //  *
+      //  * todo: validate this transaction is what you expected the user to perform in the previous step
+      //  */
   
-      // manually get the transaction to process and verify it
+      // // manually get the transaction to process and verify it
       const transaction = await connection.getParsedTransaction(
         signature,
         "confirmed",
@@ -133,18 +135,23 @@ import {
         challengeId: challengeId,
         creatorUsername: username,
         wagerAmount: amount,
-        creatorPublicKey: account
+        creatorPublicKey: account,
+        ChallengeType: challengeType
       }
 
       const baseHref = process.env.baseHref ?? "http://localhost:3000"
 
+     try{
       await axios.post(`${baseHref}/api/chess/db-queries`, {
-        params : {challengeId}
+        body : challengeJson
       },{
         headers: {
           'Content-Type': 'application/json'
         }
       });
+     } catch(err){
+      throw `Error while saving to db - ${err}`
+     }
   
       /**
        * returning a `CompletedAction` allows you to update the

@@ -63,11 +63,6 @@ import {
         process.env.SOLANA_RPC! || clusterApiUrl("devnet"),
       );
   
-      /**
-       * todo: do we need to manually re-confirm the transaction?
-       * todo: do we need to perform multiple confirmation attempts
-       */
-  
       try {
         const status = await connection.getSignatureStatus(signature);
   

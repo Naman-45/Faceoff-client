@@ -43,7 +43,7 @@ export const GET = async (req: Request) => {
         actions: [{
             type: "transaction",
             label: "Join",
-            href: `${baseHref}/api/chess/join-challenge?challengeid=${challengeId}&username={username}`,
+            href: `${baseHref}/api/chess/join-challenge?challengeId=${challengeId}&username={username}`,
             parameters: [{
               name: "username",
               label: "Enter your ingame username.",
@@ -74,26 +74,26 @@ export const OPTIONS = async () => Response.json(null, { headers });
 export const POST = async (req: Request) => {
     try {
 
-      const body: ActionPostRequest<{ username: string, }> & {
-        params: ActionPostRequest<{ username: string }>["data"];
+      const body: ActionPostRequest<{ username: string, challengeId: string }> & {
+        params: ActionPostRequest<{ username: string, challengeId: string }>["data"];
       } = await req.json();
 
       const { searchParams } = new URL(req.url);
 
-      const username = (body.params?.username || body.data?.username) as
-      | string
-      | undefined;
+      // const username = (body.params?.username || body.data?.username) as
+      // | string
+      // | undefined;
 
-      const challengeId = searchParams.get("challengeId") ?? '';
+      const username = searchParams.get('username')
 
-      const response = await axios.get(`${process.env.baseHref}/api/chess/db-queries`, {
-        params: {
-          challengeId,
-        },
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const challengeId = searchParams.get("challengeId");
+
+      if (!challengeId) {
+         throw "Invalid challengeId provided";
+      }
+
+      const response = await axios.get(`${process.env.baseHref}/api/chess/db-queries?challengeId=${challengeId}`);
+
       
       // Access the data from the response
       const challenge = response.data;
@@ -131,7 +131,7 @@ export const POST = async (req: Request) => {
         fields: {
             type: "transaction",
           transaction,
-          message: "Join challenge!",
+          message: "Challenge joined successfully, play the game!",
           links: {
             next: {
               type: "post",

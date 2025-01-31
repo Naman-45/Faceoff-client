@@ -9,10 +9,11 @@ import {
 } from "@solana/actions";
 import crypto from 'crypto';
 import dotenv from 'dotenv';
-import { Connection, PublicKey, Transaction, LAMPORTS_PER_SOL, clusterApiUrl, ComputeBudgetProgram } from "@solana/web3.js";
+import { Connection, PublicKey, Transaction, LAMPORTS_PER_SOL, clusterApiUrl, ComputeBudgetProgram, TransactionInstruction, VersionedTransaction, TransactionMessage } from "@solana/web3.js";
 import { FaceoffProgram } from "../faceoff_program";
 import { BN, Program } from "@coral-xyz/anchor";
-
+import axios from "axios";
+let ChessWebAPI = require('chess-web-api');
 const IDL = require('@/app/api/chess/faceoff_program.json');
 
 dotenv.config();
@@ -96,8 +97,13 @@ export const POST = async (req: Request) => {
 
     const amount = searchParams.get('amount');
     const username = searchParams.get('username');
-    const challengeType = searchParams.get('challengeType');
+    const challengeType = searchParams.get('challengeType') ?? 'Public';
 
+    const validChallengeTypes = ["PUBLIC", "PRIVATE"];
+    const challengeTypeUpper = challengeType.toUpperCase();
+      if (!validChallengeTypes.includes(challengeTypeUpper)) {
+            return Response.json({ error: "Invalid challenge type" }, { status: 400 });
+      }
 
     const challengeId = crypto.randomBytes(16).toString('hex');
 
@@ -109,17 +115,26 @@ export const POST = async (req: Request) => {
     }
 
     if (!amount) {
-      throw 'Invalid "amount" provided';
+      throw 'Amount not found';
     }
 
     if (!username) {
-      throw 'Invalid "username" provided';
+      throw 'Username not found';
+    }
+
+    const chessAPI = new ChessWebAPI();
+
+    try {
+      await chessAPI.getPlayer(username);
+    } catch (err: any) {
+      throw `Username- ${err.message}`;
     }
 
     const connection = new Connection(process.env.RPC_URL ?? clusterApiUrl('devnet'), "confirmed");
 
     const program: Program<FaceoffProgram> = new Program(IDL, {connection});
 
+    const ixs: TransactionInstruction[] = [];
 
     const instruction = await program.methods.createChallenge(
       challengeId,
@@ -128,38 +143,79 @@ export const POST = async (req: Request) => {
       creator: signer,
     }).instruction();
 
-    const computeBudgetInstruction = ComputeBudgetProgram.setComputeUnitLimit({
-      units: 1_000_000,
-    });
-    const computePriceInstruction = ComputeBudgetProgram.setComputeUnitPrice({
-      microLamports: 10_000_000, 
-    });
+    ixs.push(instruction);
 
-    const blockhash = await connection.getLatestBlockhash();
+    const blockhash = await connection.getLatestBlockhash({commitment: "finalized"});
 
     const transaction = new Transaction({
       feePayer: signer,
       blockhash: blockhash.blockhash,
       lastValidBlockHeight: blockhash.lastValidBlockHeight,
-    }).add(computeBudgetInstruction, computePriceInstruction, instruction)
+    }).add( instruction)
+
+    const serialTx = transaction.serialize({requireAllSignatures: false, verifySignatures: false}).toString('base64');
+
+
+    const challengeJson = {
+      challengeId: challengeId,
+      creatorUsername: username,
+      wagerAmount: amount,
+      creatorPublicKey: body.account,
+      challengeType: challengeTypeUpper
+    }
+
+    const baseHref = process.env.baseHref ?? "http://localhost:3000"
+
+    console.log("Payload being sent to DB:", challengeJson);
+
+    try {
+      await axios.post(`${baseHref}/api/chess/db-queries`, 
+        challengeJson,
+        {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+    } catch (err) {
+      console.log("Full axios error:", err);  // Add this log
+      throw `Error while saving to db - ${err}`
+    }
+
+    // const transaction = new VersionedTransaction(
+    //   new TransactionMessage({
+    //     payerKey: signer,
+    //     recentBlockhash: blockhash.blockhash,
+    //     instructions: ixs,
+    //   }).compileToV0Message()
+    // );
+
+    const message = `Your challenge has been created successfully!\nJoin with challengeId: ${challengeId}`;
 
     const payload: ActionPostResponse = await createPostResponse({
       fields: {
         type: "transaction",
         transaction,
-        message: "Create challenge!",
-        links: {
-          next: {
-            type: "post",
-            href: `/api/chess/create-challenge/next-action?challengeId=${challengeId}&amount=${amount}&username=${username}&challengeType=${challengeType}`,
-          },
-        },
+        message: message,
+        // links: {
+        //   next: {
+        //     type: "post",
+        //     href: `/api/chess/create-challenge/next-action?challengeId=${challengeId}&amount=${amount}&username=${username}&challengeType=${challengeType}`,
+        //   },
+        // },
       },
     });
+
+    // const actionResponse: ActionPostResponse = {
+    //   type: 'transaction',
+    //   transaction: serialTx,
+    //   message: message
+    // }
 
     return Response.json(payload, {
       headers,
     });
+
   } catch (err) {
     console.log(err);
     const actionError: ActionError = { message: "An unknown error occurred" };

@@ -1,4 +1,3 @@
-// app/api/challenge/save/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 
@@ -7,6 +6,8 @@ const prisma = new PrismaClient();
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
+
+    console.log("Received body:", body); 
     const { 
       challengeId,
       creatorUsername, 
@@ -14,6 +15,21 @@ export async function POST(req: NextRequest) {
       creatorPublicKey,
       challengeType 
     } = body;
+
+    console.log("Extracted values:", {
+      challengeId,
+      creatorUsername, 
+      wagerAmount, 
+      creatorPublicKey,
+      challengeType
+    });
+
+    console.log("Missing fields:", {  // Add this log
+      hasId: !!challengeId,
+      hasUsername: !!creatorUsername,
+      hasAmount: !!wagerAmount,
+      hasPublicKey: !!creatorPublicKey
+    });
 
     // Validate required fields
     if (!challengeId || !creatorUsername || !wagerAmount || !creatorPublicKey) {
@@ -28,7 +44,7 @@ export async function POST(req: NextRequest) {
       data: {
         challengeId,
         creatorUsername,
-        wagerAmount: parseFloat(wagerAmount),
+        wagerAmount: Number(wagerAmount),
         creatorPublicKey,
         challengeType,
         status: 'PENDING'
@@ -51,33 +67,27 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
-    try {
-      const body = await req.json();
-      const { 
-        challengeId,
-      } = body;
-  
-      // Validate required field
-      if (!challengeId) {
-        return NextResponse.json(
-          { error: 'Missing challengeId' },
-          { status: 400 }
-        );
-      }
-  
-      const Challenge = await prisma.challenge.findUnique({
-        where: { challengeId }
-      });
-  
-  
-      return NextResponse.json(Challenge, { status: 200});
-  
-    } catch (error) {
-      console.error('Error saving challenge:', error);
+  try {
+    const { searchParams } = new URL(req.url);
+    const challengeId = searchParams.get("challengeId");
+
+    if (!challengeId) {
       return NextResponse.json(
-        { error: 'Failed to save challenge' },
-        { status: 500 }
+        { error: "Missing challengeId" },
+        { status: 400 }
       );
     }
-  }
 
+    const challenge = await prisma.challenge.findUnique({
+      where: { challengeId },
+    });
+
+    return NextResponse.json(challenge, { status: 200 });
+  } catch (error) {
+    console.error("Error fetching challenge:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch challenge" },
+      { status: 500 }
+    );
+  }
+}

@@ -28,7 +28,7 @@ enum ChallengeType {
 model Challenge {
   id                String          @id @default(uuid())
   challengeId       String          @unique
-  wagerAmount       Decimal         @map("wager_amount") @db.Decimal(10, 2)
+  wagerAmount       Float           @map("wager_amount")
   creatorUsername   String          @map("creator_username")
   creatorPublicKey  String          @map("creator_public_key")
   opponentUsername  String?          @map("opponent_username")
