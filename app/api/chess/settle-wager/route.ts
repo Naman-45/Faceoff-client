@@ -68,54 +68,56 @@ export const POST = async (req: Request) => {
 
       const challengeId = searchParams.get("challengeId") ?? '';
 
-      const response = await axios.get(`${process.env.baseHref}/api/chess/db-queries`, {
-        params: {
-          challengeId,
-        },
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await axios.get(`${process.env.baseHref}/api/chess/db-queries?challengeId=${challengeId}`);
       
       // Access the data from the response
       const challenge = response.data;
 
-      const opponentUsername = challenge.opponentUsername;
-      const creatorUsername = challenge.creatorUsername;
-      const createdAtUnix = Math.floor(new Date(challenge.createdAt).getTime() / 1000);
       
-      const currentDate = new Date();
-      const currentYear = currentDate.getFullYear(); // Gets the current year (e.g., 2025)
-      const currentMonth = currentDate.getMonth() + 1; // Gets the current month (0-based, so add 1)
-  
-      let chessAPI = new ChessWebAPI();
-      let actualgame;
-      let winnerPublicKey: string | "none" = "none"
-      chessAPI.getPlayerCompleteMonthlyArchives(creatorUsername,currentYear,currentMonth)
-      .then(function(response: any) {
-          const lengthh = response.body.games.length;
-          const games = response.body.games.filter((game:any) => {
-              return (game.white.username === creatorUsername || game.white.username === opponentUsername) &&
-                     (game.black.username === creatorUsername || game.black.username === opponentUsername) && 
-                     game.end_time > createdAtUnix
-          });
-          actualgame = games[0];
-        }, function(err: any) {
-          throw `error while getting games from chess api - ${err}`
-        });
+    const opponentUsername = challenge.opponentUsername;
+    const creatorUsername = challenge.creatorUsername;
+    const createdAtUnix = Math.floor(new Date(challenge.createdAt).getTime() / 1000);
+    
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth() + 1;
 
-        //@ts-ignore
-        const { white, black } = actualgame;
+    const chessAPI = new ChessWebAPI();
+    
+    // Convert the chess.com API call to use async/await
+    const archivesResponse = await new Promise((resolve, reject) => {
+      chessAPI.getPlayerCompleteMonthlyArchives(creatorUsername, currentYear, currentMonth)
+        .then((response: any) => resolve(response))
+        .catch((err: any) => reject(`error while getting games from chess api - ${err}`));
+    });
+    //@ts-ignore
+    const games = archivesResponse.body.games.filter((game: any) => {
+      return (game.white.username === creatorUsername || game.white.username === opponentUsername) &&
+             (game.black.username === creatorUsername || game.black.username === opponentUsername) && 
+             game.end_time > createdAtUnix;
+    });
 
-        // Determine winner or draw
-        if (white.result === "win") {
-          winnerPublicKey = creatorUsername === white.username ? challenge.creatorPublicKey : challenge.opponentPublicKey;
-        } else if (black.result === "win") {
-          winnerPublicKey = creatorUsername === black.username ? challenge.creatorPublicKey : challenge.opponentPublicKey;
-        } else if (white.result === "draw" || black.result === "draw" || white.result === "stalemate") {
-          winnerPublicKey = "none";
-        }
-      
+    if (!games || games.length === 0) {
+      throw "No matching game found";
+    }
+
+    const actualgame = games[0];
+    const { white, black } = actualgame;
+
+    let winnerPublicKey: string | null = null;
+    
+    // Determine winner or draw
+    if (white.result === "win") {
+      winnerPublicKey = creatorUsername === white.username ? challenge.creatorPublicKey : challenge.opponentPublicKey;
+    } else if (black.result === "win") {
+      winnerPublicKey = creatorUsername === black.username ? challenge.creatorPublicKey : challenge.opponentPublicKey;
+    } else if (white.result === "timeout") {
+      winnerPublicKey = creatorUsername === black.username ? challenge.creatorPublicKey : challenge.opponentPublicKey;
+    } else if (black.result === "timeout") {
+      winnerPublicKey = creatorUsername === white.username ? challenge.creatorPublicKey : challenge.opponentPublicKey;
+    } else if (white.result === "draw" || black.result === "draw" || white.result === "stalemate") {
+      winnerPublicKey = null;
+    }
   
       let signer: PublicKey;
       try {
@@ -128,13 +130,26 @@ export const POST = async (req: Request) => {
 
       const program: Program<FaceoffProgram> = new Program(IDL, {connection});
 
-      const instruction = await program.methods.settleWager(
+      const creatorPublicKey = new PublicKey(challenge.creatorPublicKey);
+      const opponentPublicKey = new PublicKey(challenge.opponentPublicKey);
+      let instruction;
+      if(winnerPublicKey != null){
+      instruction = await program.methods.settleWager(
         new PublicKey(winnerPublicKey),
         challengeId,
-      ).accounts({
-        opponent: new PublicKey(challenge.opponentPublicKey),
-        creator: new PublicKey(challenge.creatorPublicKey),
-      }).instruction();
+      ).remainingAccounts([
+        {pubkey: creatorPublicKey, isWritable: true, isSigner: false},
+        {pubkey: opponentPublicKey, isWritable: true, isSigner: false},
+      ]).instruction();
+      }else {
+      instruction = await program.methods.settleWager(
+        null,
+        challengeId,
+      ).remainingAccounts([
+        {pubkey: creatorPublicKey, isWritable: true, isSigner: false},
+        {pubkey: opponentPublicKey, isWritable: true, isSigner: false},
+      ]).instruction();
+    }
   
       const blockhash = await connection.getLatestBlockhash();
   
@@ -147,7 +162,7 @@ export const POST = async (req: Request) => {
   
       const payload: ActionPostResponse = await createPostResponse({
         fields: {
-            type: "transaction",
+          type: "transaction",
           transaction,
           message: "Settle wager!",
           links: {

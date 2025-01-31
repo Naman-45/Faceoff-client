@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/faceoff_program.json`.
  */
 export type FaceoffProgram = {
-  "address": "J6Wt5t41ZoM85nJFGawBaAgUGFkM3RDdnuxFwHLfw19R",
+  "address": "J7NDrWGG2Y77xq21VphX1ue4xeEX4LViLAPheNhni8cb",
   "metadata": {
     "name": "faceoffProgram",
     "version": "0.1.0",
@@ -207,6 +207,11 @@ export type FaceoffProgram = {
       ],
       "accounts": [
         {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        },
+        {
           "name": "challenge",
           "writable": true,
           "pda": {
@@ -231,16 +236,6 @@ export type FaceoffProgram = {
               }
             ]
           }
-        },
-        {
-          "name": "creator",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "opponent",
-          "writable": true,
-          "signer": true
         },
         {
           "name": "programAccount",
@@ -326,6 +321,16 @@ export type FaceoffProgram = {
       "code": 6003,
       "name": "incorrectWagerAmount",
       "msg": "The wager amount is incorrect."
+    },
+    {
+      "code": 6004,
+      "name": "thirdPersonWinner",
+      "msg": "Winner is neither creator nor opponent."
+    },
+    {
+      "code": 6005,
+      "name": "missingAccounts",
+      "msg": "Missing accounts in remaining_accounts"
     }
   ],
   "types": [

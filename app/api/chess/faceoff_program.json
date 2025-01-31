@@ -1,5 +1,5 @@
 {
-  "address": "J6Wt5t41ZoM85nJFGawBaAgUGFkM3RDdnuxFwHLfw19R",
+  "address": "J7NDrWGG2Y77xq21VphX1ue4xeEX4LViLAPheNhni8cb",
   "metadata": {
     "name": "faceoff_program",
     "version": "0.1.0",
@@ -201,6 +201,11 @@
       ],
       "accounts": [
         {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        },
+        {
           "name": "challenge",
           "writable": true,
           "pda": {
@@ -225,16 +230,6 @@
               }
             ]
           }
-        },
-        {
-          "name": "creator",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "opponent",
-          "writable": true,
-          "signer": true
         },
         {
           "name": "program_account",
@@ -320,6 +315,16 @@
       "code": 6003,
       "name": "IncorrectWagerAmount",
       "msg": "The wager amount is incorrect."
+    },
+    {
+      "code": 6004,
+      "name": "ThirdPersonWinner",
+      "msg": "Winner is neither creator nor opponent."
+    },
+    {
+      "code": 6005,
+      "name": "MissingAccounts",
+      "msg": "Missing accounts in remaining_accounts"
     }
   ],
   "types": [

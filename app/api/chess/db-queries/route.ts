@@ -6,8 +6,7 @@ const prisma = new PrismaClient();
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-
-    console.log("Received body:", body); 
+ 
     const { 
       challengeId,
       creatorUsername, 
@@ -15,21 +14,6 @@ export async function POST(req: NextRequest) {
       creatorPublicKey,
       challengeType 
     } = body;
-
-    console.log("Extracted values:", {
-      challengeId,
-      creatorUsername, 
-      wagerAmount, 
-      creatorPublicKey,
-      challengeType
-    });
-
-    console.log("Missing fields:", {  // Add this log
-      hasId: !!challengeId,
-      hasUsername: !!creatorUsername,
-      hasAmount: !!wagerAmount,
-      hasPublicKey: !!creatorPublicKey
-    });
 
     // Validate required fields
     if (!challengeId || !creatorUsername || !wagerAmount || !creatorPublicKey) {

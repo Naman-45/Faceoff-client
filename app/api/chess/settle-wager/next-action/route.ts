@@ -124,7 +124,7 @@ import {
        */
       const payload: CompletedAction = {
         type: "completed",
-        title: "Wagers settled suuccessfully",
+        title: "Wager settled suuccessfully",
         icon: 'https://images.unsplash.com/photo-1611725088431-2528430c585e?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OHx8Y2hlc3N8ZW58MHx8MHx8fDA%3D',
         label: "Complete!",
         description:

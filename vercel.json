@@ -1,0 +1,8 @@
+{
+    "crons": [
+      {
+        "path": "/api/chess/automated-settlement",
+        "schedule": "*/1 * * * *"
+      }
+    ]
+  }

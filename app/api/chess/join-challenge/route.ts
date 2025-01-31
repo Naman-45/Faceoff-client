@@ -6,8 +6,8 @@ import {
     createActionHeaders, 
     createPostResponse 
 } from "@solana/actions";
-import { clusterApiUrl, 
-    ComputeBudgetProgram, 
+import { 
+    clusterApiUrl, 
     Connection, 
     LAMPORTS_PER_SOL, 
     PublicKey, 
@@ -80,10 +80,6 @@ export const POST = async (req: Request) => {
 
       const { searchParams } = new URL(req.url);
 
-      // const username = (body.params?.username || body.data?.username) as
-      // | string
-      // | undefined;
-
       const username = searchParams.get('username')
 
       const challengeId = searchParams.get("challengeId");
@@ -94,7 +90,6 @@ export const POST = async (req: Request) => {
 
       const response = await axios.get(`${process.env.baseHref}/api/chess/db-queries?challengeId=${challengeId}`);
 
-      
       // Access the data from the response
       const challenge = response.data;
 
@@ -125,7 +120,6 @@ export const POST = async (req: Request) => {
         blockhash: blockhash.blockhash,
         lastValidBlockHeight: blockhash.lastValidBlockHeight,
       }).add(instruction)
-  
   
       const payload: ActionPostResponse = await createPostResponse({
         fields: {
