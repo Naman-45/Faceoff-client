@@ -100,4 +100,4 @@ async function checkAndSettleWagers() {
         }
 }
 
-setInterval(checkAndSettleWagers, 60000); // Runs every minute
+// setInterval(checkAndSettleWagers, 60000); // Runs every minute
