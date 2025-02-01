@@ -238,6 +238,14 @@ export type FaceoffProgram = {
           }
         },
         {
+          "name": "opponent",
+          "writable": true
+        },
+        {
+          "name": "creator",
+          "writable": true
+        },
+        {
           "name": "programAccount",
           "writable": true,
           "pda": {
@@ -331,6 +339,16 @@ export type FaceoffProgram = {
       "code": 6005,
       "name": "missingAccounts",
       "msg": "Missing accounts in remaining_accounts"
+    },
+    {
+      "code": 6006,
+      "name": "wrongOpponent",
+      "msg": "Not the same opponent being passed, while settling"
+    },
+    {
+      "code": 6007,
+      "name": "wrongCreator",
+      "msg": "Not the same creator being passed, while settling"
     }
   ],
   "types": [

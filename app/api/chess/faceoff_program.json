@@ -232,6 +232,14 @@
           }
         },
         {
+          "name": "opponent",
+          "writable": true
+        },
+        {
+          "name": "creator",
+          "writable": true
+        },
+        {
           "name": "program_account",
           "writable": true,
           "pda": {
@@ -325,6 +333,16 @@
       "code": 6005,
       "name": "MissingAccounts",
       "msg": "Missing accounts in remaining_accounts"
+    },
+    {
+      "code": 6006,
+      "name": "WrongOpponent",
+      "msg": "Not the same opponent being passed, while settling"
+    },
+    {
+      "code": 6007,
+      "name": "WrongCreator",
+      "msg": "Not the same creator being passed, while settling"
     }
   ],
   "types": [

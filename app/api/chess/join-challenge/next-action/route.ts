@@ -124,13 +124,12 @@ import {
       const payload: CompletedAction = {
         type: "completed",
         title: "Challenge joined successfully",
-        icon: '/challenge-joined-successfully.jpeg',
+        icon: 'https://imgur.com/a/0bTkfoZ',
         label: "Complete!",
         description:
-          `You have now successfully joined Chess challenge, now play the match and settle the wager.\n` +
-          `Here was the signature from the last action's transaction:\n ${signature} and this is the challengeId -\n ${challengeId} `,
+          `You have now successfully joined Chess challenge, now play the match and settle the wager.` +
+          `\n Here was the signature from the last action's transaction:\n ${signature} \n and this is the challengeId -\n ${challengeId} `,
       };
-  
       return Response.json(payload, {
         headers,
       });

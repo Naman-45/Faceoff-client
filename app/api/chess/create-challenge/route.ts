@@ -9,11 +9,21 @@ import {
 } from "@solana/actions";
 import crypto from 'crypto';
 import dotenv from 'dotenv';
-import { Connection, PublicKey, Transaction, LAMPORTS_PER_SOL, clusterApiUrl, ComputeBudgetProgram, TransactionInstruction, VersionedTransaction, TransactionMessage } from "@solana/web3.js";
+import { 
+  Connection, 
+  PublicKey, 
+  Transaction, 
+  LAMPORTS_PER_SOL, 
+  clusterApiUrl, 
+  TransactionInstruction, 
+  VersionedTransaction,
+  TransactionMessage
+} from "@solana/web3.js";
 import { FaceoffProgram } from "../faceoff_program";
 import { BN, Program } from "@coral-xyz/anchor";
 import axios from "axios";
 let ChessWebAPI = require('chess-web-api');
+
 const IDL = require('@/app/api/chess/faceoff_program.json');
 
 dotenv.config();
@@ -125,11 +135,10 @@ export const POST = async (req: Request) => {
     const chessAPI = new ChessWebAPI();
 
     try {
-      await chessAPI.getPlayer(username);
+      const response = await chessAPI.getPlayer(username);
     } catch (err: any) {
       throw `Username- ${err.message}`;
     }
-
     const connection = new Connection(process.env.RPC_URL ?? clusterApiUrl('devnet'), "confirmed");
 
     const program: Program<FaceoffProgram> = new Program(IDL, {connection});
@@ -147,14 +156,19 @@ export const POST = async (req: Request) => {
 
     const blockhash = await connection.getLatestBlockhash({commitment: "finalized"});
 
-    const transaction = new Transaction({
-      feePayer: signer,
-      blockhash: blockhash.blockhash,
-      lastValidBlockHeight: blockhash.lastValidBlockHeight,
-    }).add( instruction)
+    // const transaction = new Transaction({
+    //   feePayer: signer,
+    //   blockhash: blockhash.blockhash,
+    //   lastValidBlockHeight: blockhash.lastValidBlockHeight,
+    // }).add(instruction)
 
-    const serialTx = transaction.serialize({requireAllSignatures: false, verifySignatures: false}).toString('base64');
-
+     const transaction = new VersionedTransaction(
+          new TransactionMessage({
+          payerKey: signer,
+          instructions: ixs,
+          recentBlockhash: blockhash.blockhash,
+        }).compileToV0Message()
+     );
 
     const challengeJson = {
       challengeId: challengeId,
@@ -182,13 +196,8 @@ export const POST = async (req: Request) => {
       throw `Error while saving to db - ${err}`
     }
 
-    // const transaction = new VersionedTransaction(
-    //   new TransactionMessage({
-    //     payerKey: signer,
-    //     recentBlockhash: blockhash.blockhash,
-    //     instructions: ixs,
-    //   }).compileToV0Message()
-    // );
+    const simResult = await connection.simulateTransaction(transaction);
+    console.log("Simulation result:", simResult);
 
     const message = `Your challenge has been created successfully!\nJoin with challengeId: ${challengeId}`;
 
@@ -205,12 +214,6 @@ export const POST = async (req: Request) => {
         // },
       },
     });
-
-    // const actionResponse: ActionPostResponse = {
-    //   type: 'transaction',
-    //   transaction: serialTx,
-    //   message: message
-    // }
 
     return Response.json(payload, {
       headers,

@@ -73,20 +73,19 @@ export const POST = async (req: Request) => {
       // Access the data from the response
       const challenge = response.data;
 
-      
     const opponentUsername = challenge.opponentUsername;
     const creatorUsername = challenge.creatorUsername;
     const createdAtUnix = Math.floor(new Date(challenge.createdAt).getTime() / 1000);
-    
+
     const currentDate = new Date();
     const currentYear = currentDate.getFullYear();
     const currentMonth = currentDate.getMonth() + 1;
-
+    let winnerPublicKey: string | null = null;
     const chessAPI = new ChessWebAPI();
-    
-    // Convert the chess.com API call to use async/await
+    try {
+      // Convert the chess.com API call to use async/await
     const archivesResponse = await new Promise((resolve, reject) => {
-      chessAPI.getPlayerCompleteMonthlyArchives(creatorUsername, currentYear, currentMonth)
+      chessAPI.getPlayerCompleteMonthlyArchives(creatorUsername, currentYear, currentMonth - 1)
         .then((response: any) => resolve(response))
         .catch((err: any) => reject(`error while getting games from chess api - ${err}`));
     });
@@ -103,9 +102,7 @@ export const POST = async (req: Request) => {
 
     const actualgame = games[0];
     const { white, black } = actualgame;
-
-    let winnerPublicKey: string | null = null;
-    
+  
     // Determine winner or draw
     if (white.result === "win") {
       winnerPublicKey = creatorUsername === white.username ? challenge.creatorPublicKey : challenge.opponentPublicKey;
@@ -118,6 +115,10 @@ export const POST = async (req: Request) => {
     } else if (white.result === "draw" || black.result === "draw" || white.result === "stalemate") {
       winnerPublicKey = null;
     }
+    }catch(err){
+      throw `${err}`
+    }
+    
   
       let signer: PublicKey;
       try {
@@ -129,27 +130,17 @@ export const POST = async (req: Request) => {
       const connection = new Connection(process.env.RPC_URL ?? clusterApiUrl('devnet'), "confirmed");
 
       const program: Program<FaceoffProgram> = new Program(IDL, {connection});
-
       const creatorPublicKey = new PublicKey(challenge.creatorPublicKey);
       const opponentPublicKey = new PublicKey(challenge.opponentPublicKey);
-      let instruction;
-      if(winnerPublicKey != null){
-      instruction = await program.methods.settleWager(
-        new PublicKey(winnerPublicKey),
+
+      const instruction = await program.methods.settleWager(
+        winnerPublicKey ? new PublicKey(winnerPublicKey) : null,
         challengeId,
-      ).remainingAccounts([
-        {pubkey: creatorPublicKey, isWritable: true, isSigner: false},
-        {pubkey: opponentPublicKey, isWritable: true, isSigner: false},
-      ]).instruction();
-      }else {
-      instruction = await program.methods.settleWager(
-        null,
-        challengeId,
-      ).remainingAccounts([
-        {pubkey: creatorPublicKey, isWritable: true, isSigner: false},
-        {pubkey: opponentPublicKey, isWritable: true, isSigner: false},
-      ]).instruction();
-    }
+      ).accounts({
+        opponent: creatorPublicKey,
+        creator: opponentPublicKey
+      }).instruction();
+      
   
       const blockhash = await connection.getLatestBlockhash();
   
@@ -158,8 +149,7 @@ export const POST = async (req: Request) => {
         blockhash: blockhash.blockhash,
         lastValidBlockHeight: blockhash.lastValidBlockHeight,
       }).add(instruction)
-  
-  
+    
       const payload: ActionPostResponse = await createPostResponse({
         fields: {
           type: "transaction",
