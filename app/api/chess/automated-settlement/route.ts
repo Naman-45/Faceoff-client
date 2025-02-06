@@ -89,7 +89,7 @@ async function checkAndSettleWagers() {
                   instructions: ixs,
                   recentBlockhash: blockhash.blockhash,
                 }).compileToV0Message()
-              );
+              )
 
             transaction.sign([wallet]);            
 
@@ -100,4 +100,5 @@ async function checkAndSettleWagers() {
         }
 }
 
+checkAndSettleWagers();
 // setInterval(checkAndSettleWagers, 60000); // Runs every minute

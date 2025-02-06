@@ -14,11 +14,12 @@ import {
     Transaction 
 } from "@solana/web3.js";
 import dotenv from 'dotenv'
-import { FaceoffProgram } from "../faceoff_program";
+import { Reclaim } from "../reclaim";
 import { BN, Program } from "@coral-xyz/anchor";
 import axios from "axios";
+import { TOKEN_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/utils/token";
 
-const IDL = require('@/app/api/chess/faceoff_program.json');
+const IDL = require('@/app/api/chess/reclaim.json');
 
 dotenv.config();
 
@@ -101,16 +102,19 @@ export const POST = async (req: Request) => {
       } catch (err) {
         throw `Invalid account provided, ${err}`;
       }
-  
+      
+      const usdc_mint = new PublicKey('4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU');
       const connection = new Connection(process.env.RPC_URL ?? clusterApiUrl('devnet'), "confirmed");
 
-      const program: Program<FaceoffProgram> = new Program(IDL, {connection});
+      const program: Program<Reclaim> = new Program(IDL, {connection});
 
       const instruction = await program.methods.joinChallenge(
         challengeId,
         new BN(amount * LAMPORTS_PER_SOL)
       ).accounts({
         opponent: signer,
+        tokenMint: usdc_mint,
+        tokenProgram: TOKEN_PROGRAM_ID
       }).instruction();
   
       const blockhash = await connection.getLatestBlockhash();

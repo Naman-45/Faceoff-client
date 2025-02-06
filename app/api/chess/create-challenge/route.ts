@@ -12,19 +12,19 @@ import dotenv from 'dotenv';
 import { 
   Connection, 
   PublicKey, 
-  Transaction, 
   LAMPORTS_PER_SOL, 
   clusterApiUrl, 
   TransactionInstruction, 
   VersionedTransaction,
   TransactionMessage
 } from "@solana/web3.js";
-import { FaceoffProgram } from "../faceoff_program";
-import { BN, Program } from "@coral-xyz/anchor";
+import { Reclaim } from "../reclaim";
+import { BN,  Program } from "@coral-xyz/anchor";
 import axios from "axios";
+import { TOKEN_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/utils/token";
 let ChessWebAPI = require('chess-web-api');
 
-const IDL = require('@/app/api/chess/faceoff_program.json');
+const IDL = require('@/app/api/chess/reclaim.json');
 
 dotenv.config();
 
@@ -46,7 +46,7 @@ export const GET = async () => {
         },
         {
           name: "amount",
-          label: "Enter wager amount in SOL",
+          label: "Enter wager amount in USDC",
           required: true,
           type: "number"
         },
@@ -141,7 +141,9 @@ export const POST = async (req: Request) => {
     }
     const connection = new Connection(process.env.RPC_URL ?? clusterApiUrl('devnet'), "confirmed");
 
-    const program: Program<FaceoffProgram> = new Program(IDL, {connection});
+    const usdc_mint = new PublicKey('4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU');
+
+    const program: Program<Reclaim> = new Program(IDL, {connection});
 
     const ixs: TransactionInstruction[] = [];
 
@@ -150,17 +152,13 @@ export const POST = async (req: Request) => {
       new BN(Number(amount) * LAMPORTS_PER_SOL)
     ).accounts({
       creator: signer,
+      tokenMint: usdc_mint,
+      tokenProgram: TOKEN_PROGRAM_ID
     }).instruction();
 
     ixs.push(instruction);
 
     const blockhash = await connection.getLatestBlockhash({commitment: "finalized"});
-
-    // const transaction = new Transaction({
-    //   feePayer: signer,
-    //   blockhash: blockhash.blockhash,
-    //   lastValidBlockHeight: blockhash.lastValidBlockHeight,
-    // }).add(instruction)
 
      const transaction = new VersionedTransaction(
           new TransactionMessage({

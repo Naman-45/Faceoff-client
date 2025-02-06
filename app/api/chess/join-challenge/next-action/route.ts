@@ -124,7 +124,7 @@ import {
       const payload: CompletedAction = {
         type: "completed",
         title: "Challenge joined successfully",
-        icon: 'https://imgur.com/a/0bTkfoZ',
+        icon: 'https://res.cloudinary.com/dxyexbgt6/image/upload/v1738417677/challenge-joined-successfully_zzam4f.jpg',
         label: "Complete!",
         description:
           `You have now successfully joined Chess challenge, now play the match and settle the wager.` +

@@ -1,0 +1,1630 @@
+{
+  "address": "EopRkEakcNd3kC7SZZKXqAHFx1ysXwcAsDW2ABhKAGpN",
+  "metadata": {
+    "name": "reclaim",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Reclaim Protocol SDK for Solana",
+    "repository": "https://gitlab.reclaimprotocol.org/reclaim-clients/solana-sdk"
+  },
+  "instructions": [
+    {
+      "name": "add_epoch",
+      "discriminator": [
+        250,
+        231,
+        141,
+        199,
+        139,
+        208,
+        231,
+        27
+      ],
+      "accounts": [
+        {
+          "name": "epoch",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  99,
+                  108,
+                  97,
+                  105,
+                  109
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "epoch_config"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  112,
+                  111,
+                  99,
+                  104
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "epoch_config.epoch_index.checked_add(1)",
+                "account": "EpochConfig"
+              }
+            ]
+          }
+        },
+        {
+          "name": "epoch_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  99,
+                  108,
+                  97,
+                  105,
+                  109
+                ]
+              },
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  112,
+                  111,
+                  99,
+                  104,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "epoch_config.create_key",
+                "account": "EpochConfig"
+              }
+            ]
+          }
+        },
+        {
+          "name": "rent_payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "deployer",
+          "signer": true,
+          "relations": [
+            "epoch_config"
+          ]
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "AddEpochArgs"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "change_epoch_index_epoch_config",
+      "discriminator": [
+        138,
+        57,
+        206,
+        183,
+        109,
+        57,
+        251,
+        139
+      ],
+      "accounts": [
+        {
+          "name": "epoch_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  99,
+                  108,
+                  97,
+                  105,
+                  109
+                ]
+              },
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  112,
+                  111,
+                  99,
+                  104,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "epoch_config.create_key",
+                "account": "EpochConfig"
+              }
+            ]
+          }
+        },
+        {
+          "name": "deployer",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "epoch_config"
+          ]
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "ChangeEpochIndexEpochConfigArgs"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "create_challenge",
+      "discriminator": [
+        170,
+        244,
+        47,
+        1,
+        1,
+        15,
+        173,
+        239
+      ],
+      "accounts": [
+        {
+          "name": "creator",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "challenge",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  104,
+                  97,
+                  108,
+                  108,
+                  101,
+                  110,
+                  103,
+                  101
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "challenge_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_mint"
+        },
+        {
+          "name": "creator_token_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "creator"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "token_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "program_token_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "challenge"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "token_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "challenge_id",
+          "type": "string"
+        },
+        {
+          "name": "wager_amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "create_group",
+      "discriminator": [
+        79,
+        60,
+        158,
+        134,
+        61,
+        199,
+        56,
+        248
+      ],
+      "accounts": [
+        {
+          "name": "group",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  99,
+                  108,
+                  97,
+                  105,
+                  109
+                ]
+              },
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  114,
+                  111,
+                  117,
+                  112
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "args.provider"
+              }
+            ]
+          }
+        },
+        {
+          "name": "creator",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "CreateGroupArgs"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "initialize_epoch_config",
+      "discriminator": [
+        224,
+        171,
+        134,
+        64,
+        85,
+        90,
+        160,
+        246
+      ],
+      "accounts": [
+        {
+          "name": "epoch_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  99,
+                  108,
+                  97,
+                  105,
+                  109
+                ]
+              },
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  112,
+                  111,
+                  99,
+                  104,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "create_key"
+              }
+            ]
+          }
+        },
+        {
+          "name": "create_key",
+          "signer": true
+        },
+        {
+          "name": "deployer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "InitializeEpochConfigArgs"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "join_challenge",
+      "discriminator": [
+        41,
+        104,
+        214,
+        73,
+        32,
+        168,
+        76,
+        79
+      ],
+      "accounts": [
+        {
+          "name": "opponent",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "challenge",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  104,
+                  97,
+                  108,
+                  108,
+                  101,
+                  110,
+                  103,
+                  101
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "challenge_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_mint"
+        },
+        {
+          "name": "opponent_token_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "opponent"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "token_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "program_token_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "challenge"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "token_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "challenge_id",
+          "type": "string"
+        },
+        {
+          "name": "wager_amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "settle_wager",
+      "discriminator": [
+        161,
+        242,
+        169,
+        152,
+        172,
+        163,
+        161,
+        104
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "creator",
+          "writable": true
+        },
+        {
+          "name": "opponent",
+          "writable": true
+        },
+        {
+          "name": "challenge",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  104,
+                  97,
+                  108,
+                  108,
+                  101,
+                  110,
+                  103,
+                  101
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "challenge_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_mint"
+        },
+        {
+          "name": "opponent_token_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "opponent"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "token_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "creator_token_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "opponent"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "token_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "program_token_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "challenge"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "token_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "epoch",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  99,
+                  108,
+                  97,
+                  105,
+                  109
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "epoch_config"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  112,
+                  111,
+                  99,
+                  104
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "args.signed_claim.claim_data.epoch_index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "epoch_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  99,
+                  108,
+                  97,
+                  105,
+                  109
+                ]
+              },
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  112,
+                  111,
+                  99,
+                  104,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "epoch_config.create_key",
+                "account": "EpochConfig"
+              }
+            ]
+          },
+          "relations": [
+            "epoch"
+          ]
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "challenge_id",
+          "type": "string"
+        },
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "VerifyProofArgs"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Challenge",
+      "discriminator": [
+        119,
+        250,
+        161,
+        121,
+        119,
+        81,
+        22,
+        208
+      ]
+    },
+    {
+      "name": "Epoch",
+      "discriminator": [
+        93,
+        83,
+        120,
+        89,
+        151,
+        138,
+        152,
+        108
+      ]
+    },
+    {
+      "name": "EpochConfig",
+      "discriminator": [
+        190,
+        66,
+        87,
+        197,
+        214,
+        153,
+        144,
+        193
+      ]
+    },
+    {
+      "name": "Group",
+      "discriminator": [
+        209,
+        249,
+        208,
+        63,
+        182,
+        89,
+        186,
+        254
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "AddEpochEvent",
+      "discriminator": [
+        44,
+        4,
+        13,
+        72,
+        233,
+        106,
+        126,
+        98
+      ]
+    },
+    {
+      "name": "CreateDappEvent",
+      "discriminator": [
+        141,
+        240,
+        207,
+        199,
+        10,
+        97,
+        196,
+        103
+      ]
+    },
+    {
+      "name": "CreateGroupEvent",
+      "discriminator": [
+        20,
+        202,
+        243,
+        230,
+        108,
+        233,
+        164,
+        241
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "InvalidEpochDuration",
+      "msg": "Invalid Epoch Duration"
+    },
+    {
+      "code": 6001,
+      "name": "InvalidEpochIndex",
+      "msg": "Invalid Epoch Index"
+    },
+    {
+      "code": 6002,
+      "name": "InvalidWitness",
+      "msg": "Invalid Witness"
+    },
+    {
+      "code": 6003,
+      "name": "Unauthorized",
+      "msg": "Unauthorized address"
+    },
+    {
+      "code": 6004,
+      "name": "HostTooLong",
+      "msg": "Host length exceeds limit"
+    },
+    {
+      "code": 6005,
+      "name": "ProviderTooLong",
+      "msg": "Provider length exceeds limit"
+    },
+    {
+      "code": 6006,
+      "name": "InvalidWitnessClaimCount",
+      "msg": "Invalid Witnes Claim count"
+    },
+    {
+      "code": 6007,
+      "name": "EpochAlreadyExists",
+      "msg": "Epoch already exists"
+    },
+    {
+      "code": 6008,
+      "name": "MaxEpochLengthReached",
+      "msg": "Max Epochs reached"
+    },
+    {
+      "code": 6009,
+      "name": "MaxWitnessesReached",
+      "msg": "Max Witnesses reached"
+    },
+    {
+      "code": 6010,
+      "name": "MemberAlreadyExists",
+      "msg": "Member already exists"
+    },
+    {
+      "code": 6011,
+      "name": "MaxMembersReached",
+      "msg": "Max Members reached"
+    },
+    {
+      "code": 6012,
+      "name": "InvalidIdentifier",
+      "msg": "Invalid Identifier"
+    },
+    {
+      "code": 6013,
+      "name": "InvalidWitnessSignature",
+      "msg": "Invalid Witness Signature"
+    },
+    {
+      "code": 6014,
+      "name": "ArithmeticPanic",
+      "msg": "Arithmetic Error"
+    }
+  ],
+  "types": [
+    {
+      "name": "AddEpochArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "witnesses",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "Witness"
+                }
+              }
+            }
+          },
+          {
+            "name": "minimum_witnesses_for_claim",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AddEpochEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "epoch_config",
+            "type": "pubkey"
+          },
+          {
+            "name": "index",
+            "type": "u32"
+          },
+          {
+            "name": "created_at",
+            "type": "i64"
+          },
+          {
+            "name": "expired_at",
+            "type": "i64"
+          },
+          {
+            "name": "minimum_witnesses_for_claim",
+            "type": "u8"
+          },
+          {
+            "name": "witnesses",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "Witness"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Challenge",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "creator",
+            "type": "pubkey"
+          },
+          {
+            "name": "opponent",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "wager_amount",
+            "type": "u64"
+          },
+          {
+            "name": "result_settled",
+            "type": "bool"
+          },
+          {
+            "name": "winner",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "challenge_bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ChangeEpochIndexEpochConfigArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "new_epoch_index",
+            "type": "u32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ClaimData",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "identifier",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "owner",
+            "type": "string"
+          },
+          {
+            "name": "timestamp",
+            "type": "u32"
+          },
+          {
+            "name": "epoch_index",
+            "type": "u32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ClaimInfo",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "provider",
+            "type": "string"
+          },
+          {
+            "name": "parameters",
+            "type": "string"
+          },
+          {
+            "name": "context_address",
+            "type": "pubkey"
+          },
+          {
+            "name": "context_message",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CreateDappEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "id",
+            "type": "u32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CreateGroupArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "provider",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CreateGroupEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "id",
+            "type": "u32"
+          },
+          {
+            "name": "group_address",
+            "type": "pubkey"
+          },
+          {
+            "name": "provider",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Epoch",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "epoch_config",
+            "type": "pubkey"
+          },
+          {
+            "name": "index",
+            "type": "u32"
+          },
+          {
+            "name": "created_at",
+            "type": "i64"
+          },
+          {
+            "name": "expired_at",
+            "type": "i64"
+          },
+          {
+            "name": "minimum_witnesses_for_claim",
+            "type": "u8"
+          },
+          {
+            "name": "witnesses",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "Witness"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "EpochConfig",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "create_key",
+            "type": "pubkey"
+          },
+          {
+            "name": "deployer",
+            "type": "pubkey"
+          },
+          {
+            "name": "epoch_duration_seconds",
+            "type": "u64"
+          },
+          {
+            "name": "epoch_index",
+            "type": "u32"
+          },
+          {
+            "name": "epochs",
+            "type": {
+              "vec": "pubkey"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Group",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "id",
+            "type": "u32"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "creator",
+            "type": "pubkey"
+          },
+          {
+            "name": "provider",
+            "type": "string"
+          },
+          {
+            "name": "members",
+            "type": {
+              "vec": "pubkey"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "InitializeEpochConfigArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "epoch_duration_seconds",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SignedClaim",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "claim_data",
+            "type": {
+              "defined": {
+                "name": "ClaimData"
+              }
+            }
+          },
+          {
+            "name": "signatures",
+            "type": {
+              "vec": {
+                "array": [
+                  "u8",
+                  65
+                ]
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "VerifyProofArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "claim_info",
+            "type": {
+              "defined": {
+                "name": "ClaimInfo"
+              }
+            }
+          },
+          {
+            "name": "signed_claim",
+            "type": {
+              "defined": {
+                "name": "SignedClaim"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Witness",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "address",
+            "type": "string"
+          },
+          {
+            "name": "url",
+            "type": "string"
+          }
+        ]
+      }
+    }
+  ]
+}

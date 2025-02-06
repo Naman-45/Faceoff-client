@@ -1,4 +1,4 @@
-import { Program } from "@coral-xyz/anchor";
+import { web3, Program } from "@coral-xyz/anchor";
 import { 
     ActionError, 
     ActionGetResponse, 
@@ -7,13 +7,18 @@ import {
     createActionHeaders, 
     createPostResponse 
 } from "@solana/actions";
-import { clusterApiUrl, Connection, PublicKey, Transaction } from "@solana/web3.js";
+import { clusterApiUrl, PublicKey, TransactionInstruction, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
 import axios from "axios";
-import { FaceoffProgram } from "../faceoff_program";
+import { Reclaim } from "../reclaim";
+const { ReclaimClient } = require('@reclaimprotocol/zk-fetch');
+import { verifyProof, transformForOnchain } from "@reclaimprotocol/js-sdk";
+import { TOKEN_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/utils/token";
 
 const ChessWebAPI = require('chess-web-api');
 
-const IDL = require('@/app/api/chess/faceoff_program.json');
+const client = new ReclaimClient('0xD8A3819B6014015C2dAC28d17D82f5D9A01Eb01A', '0x9ffa5d70471c31e69bfbd24d7d7ad8de0c5a9253d3c050c5d94e70ab3f89215a');
+
+const IDL = require('@/app/api/chess/reclaim.json');
 
 // create the standard headers for this route (including CORS)
 const headers = createActionHeaders();
@@ -68,87 +73,125 @@ export const POST = async (req: Request) => {
 
       const challengeId = searchParams.get("challengeId") ?? '';
 
-      const response = await axios.get(`${process.env.baseHref}/api/chess/db-queries?challengeId=${challengeId}`);
-      
-      // Access the data from the response
-      const challenge = response.data;
-
-    const opponentUsername = challenge.opponentUsername;
-    const creatorUsername = challenge.creatorUsername;
-    const createdAtUnix = Math.floor(new Date(challenge.createdAt).getTime() / 1000);
-
-    const currentDate = new Date();
-    const currentYear = currentDate.getFullYear();
-    const currentMonth = currentDate.getMonth() + 1;
-    let winnerPublicKey: string | null = null;
-    const chessAPI = new ChessWebAPI();
-    try {
-      // Convert the chess.com API call to use async/await
-    const archivesResponse = await new Promise((resolve, reject) => {
-      chessAPI.getPlayerCompleteMonthlyArchives(creatorUsername, currentYear, currentMonth - 1)
-        .then((response: any) => resolve(response))
-        .catch((err: any) => reject(`error while getting games from chess api - ${err}`));
-    });
-    //@ts-ignore
-    const games = archivesResponse.body.games.filter((game: any) => {
-      return (game.white.username === creatorUsername || game.white.username === opponentUsername) &&
-             (game.black.username === creatorUsername || game.black.username === opponentUsername) && 
-             game.end_time > createdAtUnix;
-    });
-
-    if (!games || games.length === 0) {
-      throw "No matching game found";
-    }
-
-    const actualgame = games[0];
-    const { white, black } = actualgame;
-  
-    // Determine winner or draw
-    if (white.result === "win") {
-      winnerPublicKey = creatorUsername === white.username ? challenge.creatorPublicKey : challenge.opponentPublicKey;
-    } else if (black.result === "win") {
-      winnerPublicKey = creatorUsername === black.username ? challenge.creatorPublicKey : challenge.opponentPublicKey;
-    } else if (white.result === "timeout") {
-      winnerPublicKey = creatorUsername === black.username ? challenge.creatorPublicKey : challenge.opponentPublicKey;
-    } else if (black.result === "timeout") {
-      winnerPublicKey = creatorUsername === white.username ? challenge.creatorPublicKey : challenge.opponentPublicKey;
-    } else if (white.result === "draw" || black.result === "draw" || white.result === "stalemate") {
-      winnerPublicKey = null;
-    }
-    }catch(err){
-      throw `${err}`
-    }
-    
-  
       let signer: PublicKey;
       try {
         signer = new PublicKey(body.account);
       } catch (err) {
         throw `Invalid account provided, ${err}`;
       }
-  
-      const connection = new Connection(process.env.RPC_URL ?? clusterApiUrl('devnet'), "confirmed");
 
-      const program: Program<FaceoffProgram> = new Program(IDL, {connection});
+      const response = await axios.get(`${process.env.baseHref}/api/chess/db-queries?challengeId=${challengeId}`);
+      
+      // Access the data from the response
+    const challenge = response.data;
+    let proof;
+    let proofData;
+    try {
+      const createdAtUnix = Math.floor(new Date(challenge.createdAt).getTime() / 1000);
+      const currentDate = new Date();
+      const currentYear = currentDate.getFullYear();
+      const currentMonth = currentDate.getMonth() + 1;
+      const monthStr = currentMonth < 10 ? `0${currentMonth}` : currentMonth.toString();
+      
+      const url = `https://api.chess.com/pub/player/${challenge.creatorUsername}/games/${currentYear}/${monthStr}`;
+      
+      // First, let's fetch and log the raw games data
+      console.log('Fetching games from:', url);
+      const rawResponse = await fetch(url);
+      const rawData = await rawResponse.json();
+      console.log('Number of games found:', rawData.games?.length || 0);
+      
+      // Find the first valid game between the players after wager creation
+      const validGame = rawData.games?.find((game: any) => {
+        const isValidPlayers = (
+          (game.white.username === challenge.creatorUsername && game.black.username === challenge.opponentUsername) ||
+          (game.white.username === challenge.opponentUsername && game.black.username === challenge.creatorUsername)
+        );
+        const isAfterWager = parseInt(game.end_time) > createdAtUnix;
+        return isValidPlayers && isAfterWager;
+      });
+
+      if (!validGame) {
+        throw new Error("No valid game found between the players after wager creation");
+      }
+
+      console.log('\nFound valid game:', {
+        white: validGame.white.username,
+        black: validGame.black.username,
+        endTime: new Date(validGame.end_time * 1000).toISOString()
+      });
+
+      // Create response template based on the valid game
+      const gameJson = JSON.stringify(validGame);
+      
+      const responseMatches = [
+        {
+          type: "regex",
+          value: `"end_time":\\s*${validGame.end_time}`
+        },
+        {
+          type: "regex",
+          value: `"white":\\s*\\{[^}]*"result":\\s*"${validGame.white.result}"[^}]*"username":\\s*"${validGame.white.username}"[^}]*\\}`
+        },
+        {
+          type: "regex",
+          value: `"black":\\s*\\{[^}]*"result":\\s*"${validGame.black.result}"[^}]*"username":\\s*"${validGame.black.username}"[^}]*\\}`
+        }
+      ];
+  
+      proof = await client.zkFetch(url, {
+        method: 'GET',
+      }, {
+        responseMatches
+      });
+  
+      // Verify the proof
+      const isVerified = await verifyProof(proof);
+      if (!isVerified) {
+        throw new Error('Chess.com API proof verification failed.');
+      }
+       
+      proofData = transformForOnchain(proof);
+
+    } catch (error) {
+      console.error('Error getting game proof:', error);
+      throw error;
+    }  
+  
+      const connection = new web3.Connection(process.env.RPC_URL ?? clusterApiUrl('devnet'), "confirmed");
+
+      const program: Program<Reclaim> = new Program(IDL,{connection});
+
+      const usdc_mint = new PublicKey('4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU');
       const creatorPublicKey = new PublicKey(challenge.creatorPublicKey);
       const opponentPublicKey = new PublicKey(challenge.opponentPublicKey);
 
+      let ixs: TransactionInstruction[] = [];
       const instruction = await program.methods.settleWager(
-        winnerPublicKey ? new PublicKey(winnerPublicKey) : null,
         challengeId,
+        proofData
       ).accounts({
-        opponent: creatorPublicKey,
-        creator: opponentPublicKey
+        signer: signer,
+        creator: creatorPublicKey,
+        opponent: opponentPublicKey,
+        tokenMint: usdc_mint,
+        tokenProgram: TOKEN_PROGRAM_ID
       }).instruction();
-      
-  
+
+      ixs.push(instruction);
+        
       const blockhash = await connection.getLatestBlockhash();
+      
+      const transaction = new VersionedTransaction(
+        new TransactionMessage({
+        payerKey: signer,
+        instructions: ixs,
+        recentBlockhash: blockhash.blockhash,
+      }).compileToV0Message()
+   );
   
-      const transaction = new Transaction({
-        feePayer: signer,
-        blockhash: blockhash.blockhash,
-        lastValidBlockHeight: blockhash.lastValidBlockHeight,
-      }).add(instruction)
+      const simulation = await connection.simulateTransaction(transaction);
+      console.log(simulation);
     
       const payload: ActionPostResponse = await createPostResponse({
         fields: {
