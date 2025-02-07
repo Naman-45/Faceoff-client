@@ -12,7 +12,8 @@ export async function POST(req: NextRequest) {
       creatorUsername, 
       wagerAmount, 
       creatorPublicKey,
-      challengeType 
+      challengeType,
+      creatorPhoneNumber
     } = body;
 
     // Validate required fields
@@ -31,7 +32,8 @@ export async function POST(req: NextRequest) {
         wagerAmount: Number(wagerAmount),
         creatorPublicKey,
         challengeType,
-        status: 'PENDING'
+        status: 'PENDING',
+        creatorPhoneNumber: creatorPhoneNumber
       }
     });
 

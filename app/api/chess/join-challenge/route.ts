@@ -44,12 +44,18 @@ export const GET = async (req: Request) => {
         actions: [{
             type: "transaction",
             label: "Join",
-            href: `${baseHref}/api/chess/join-challenge?challengeId=${challengeId}&username={username}`,
+            href: `${baseHref}/api/chess/join-challenge?challengeId=${challengeId}&username={username}&phoneNumber={phoneNumber}`,
             parameters: [{
               name: "username",
               label: "Enter your ingame username.",
               required: true
-            }]
+            },
+            {
+              name: "phoneNumber",
+              label: "Enter phone number to recieve updates",
+              type: 'number'
+            }
+          ]
         }]
       }
       
@@ -68,8 +74,6 @@ export const GET = async (req: Request) => {
   }
 };
 
-// DO NOT FORGET TO INCLUDE THE `OPTIONS` HTTP METHOD
-// THIS WILL ENSURE CORS WORKS FOR BLINKS
 export const OPTIONS = async () => Response.json(null, { headers });
 
 export const POST = async (req: Request) => {
@@ -82,8 +86,8 @@ export const POST = async (req: Request) => {
       const { searchParams } = new URL(req.url);
 
       const username = searchParams.get('username')
-
       const challengeId = searchParams.get("challengeId");
+      const opponentPhoneNumber = searchParams.get("phoneNumber") ?? 0
 
       if (!challengeId) {
          throw "Invalid challengeId provided";
@@ -93,8 +97,8 @@ export const POST = async (req: Request) => {
 
       // Access the data from the response
       const challenge = response.data;
-
       const amount = challenge.wagerAmount;
+      const creatorPhoneNumber = challenge.creatorPhoneNumber ?? null;
 
       let signer: PublicKey;
       try {
@@ -133,7 +137,7 @@ export const POST = async (req: Request) => {
           links: {
             next: {
               type: "post",
-              href: `/api/chess/join-challenge/next-action?challengeId=${challengeId}&username=${username}`,
+              href: `/api/chess/join-challenge/next-action?challengeId=${challengeId}&username=${username}&opponentPhoneNumber=${opponentPhoneNumber}&creatorPhonenumber=${creatorPhoneNumber}`,
             },
           },
         },

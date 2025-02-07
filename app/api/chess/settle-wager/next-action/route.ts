@@ -12,26 +12,15 @@ import {
 
   dotenv.config();
   
-  // create the standard headers for this route (including CORS)
   const headers = createActionHeaders();
   
-  /**
-   * since this endpoint is only meant to handle the callback request
-   * for the action chaining, it does not accept or process GET requests
-   */
   export const GET = async () => {
     return Response.json({ message: "Method not supported" } as ActionError, {
       status: 403,
       headers,
     });
   };
-  
-  /**
-   * Responding to OPTIONS request is still required even though we ignore GET requests
-   *
-   * DO NOT FORGET TO INCLUDE THE `OPTIONS` HTTP METHOD
-   * THIS WILL ENSURE CORS WORKS FOR BLINKS
-   */
+
   export const OPTIONS = async () => Response.json(null, { headers });
   
   export const POST = async (req: Request) => {
@@ -79,25 +68,12 @@ import {
             throw "Unable to confirm the transaction";
           }
         }
-  
-        // todo: check for a specific confirmation status if desired
-        // if (status.value?.confirmationStatus != "confirmed")
+
       } catch (err) {
         if (typeof err == "string") throw err;
         throw "Unable to confirm the provided signature";
       }
   
-      /**
-       * !TAKE CAUTION!
-       *
-       * since any client side request can access this public endpoint,
-       * a malicious actor could provide a valid signature that does NOT
-       * perform the previous action's transaction.
-       *
-       * todo: validate this transaction is what you expected the user to perform in the previous step
-       */
-  
-      // manually get the transaction to process and verify it
       const transaction = await connection.getParsedTransaction(
         signature,
         "confirmed",
@@ -115,13 +91,6 @@ import {
         }
     })
   
-      /**
-       * returning a `CompletedAction` allows you to update the
-       * blink metadata but not allow the user to perform any
-       * follow on actions or user input
-       *
-       * you can update any of these details
-       */
       const payload: CompletedAction = {
         type: "completed",
         title: "Wager settled suuccessfully",

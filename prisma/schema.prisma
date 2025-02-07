@@ -31,6 +31,8 @@ model Challenge {
   wagerAmount       Float           @map("wager_amount")
   creatorUsername   String          @map("creator_username")
   creatorPublicKey  String          @map("creator_public_key")
+  creatorPhoneNumber BigInt         @default(0)
+  opponentPhoneNumber BigInt        @default(0)
   opponentUsername  String?          @map("opponent_username")
   opponentPublicKey  String?          @map("opponent_public_key")
   status            ChallengeStatus @default(PENDING)

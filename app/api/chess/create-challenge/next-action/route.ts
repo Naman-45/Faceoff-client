@@ -6,47 +6,39 @@ import {
     CompletedAction,
   } from "@solana/actions";
   import { clusterApiUrl, Connection, PublicKey } from "@solana/web3.js";
-  import axios from 'axios';
   import dotenv from 'dotenv';
+  import twilio from "twilio";
 
   dotenv.config();
   
   // create the standard headers for this route (including CORS)
   const headers = createActionHeaders();
-  
-  /**
-   * since this endpoint is only meant to handle the callback request
-   * for the action chaining, it does not accept or process GET requests
-   */
+
+  const accountSid = process.env.TWILIO_ACCOUNT_SID;
+  const authToken = process.env.TWILIO_AUTH_TOKEN;
+  const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
+
+
+  const client = twilio(accountSid, authToken);
+
   export const GET = async () => {
     return Response.json({ message: "Method not supported" } as ActionError, {
       status: 403,
       headers,
     });
   };
-  
-  /**
-   * Responding to OPTIONS request is still required even though we ignore GET requests
-   *
-   * DO NOT FORGET TO INCLUDE THE `OPTIONS` HTTP METHOD
-   * THIS WILL ENSURE CORS WORKS FOR BLINKS
-   */
+
   export const OPTIONS = async () => Response.json(null, { headers });
   
   export const POST = async (req: Request) => {
     try {
 
-      /**
-       * we can type the `body.data` to what fields we expect from the GET response above
-       */
       const body: NextActionPostRequest = await req.json();
-
 
       const { searchParams } = new URL(req.url);
       const challengeId = searchParams.get('challengeId');
-      const amount = searchParams.get('amount');
-      const username = searchParams.get('username');
       const challengeType = searchParams.get('challengeType');
+      const phoneNumber = searchParams.get('phoneNumber');
 
       let account: PublicKey;
       try {
@@ -92,8 +84,6 @@ import {
       try {
         const status = await waitForConfirmation(signature);
   
-        console.log("signature status:", status);
-  
         if (!status) throw "Unknown signature status";
   
         // only accept `confirmed` and `finalized` transactions
@@ -105,61 +95,32 @@ import {
             throw "Unable to confirm the transaction";
           }
         }
-  
-        // todo: check for a specific confirmation status if desired
-        // if (status.value?.confirmationStatus != "confirmed")
+ 
       } catch (err) {
         if (typeof err == "string") throw err;
         throw "Unable to confirm the provided signature";
       }
-  
-      // /**
-      //  * !TAKE CAUTION!
-      //  *
-      //  * since any client side request can access this public endpoint,
-      //  * a malicious actor could provide a valid signature that does NOT
-      //  * perform the previous action's transaction.
-      //  *
-      //  * todo: validate this transaction is what you expected the user to perform in the previous step
-      //  */
-  
-      // // manually get the transaction to process and verify it
+
       const transaction = await connection.getParsedTransaction(
         signature,
         "confirmed",
       );
-  
-      console.log("transaction: ", transaction);
 
-      const challengeJson = {
-        challengeId: challengeId,
-        creatorUsername: username,
-        wagerAmount: amount,
-        creatorPublicKey: account,
-        ChallengeType: challengeType
+
+      if(phoneNumber){
+      let messageContent: string;
+      if(challengeType == 'PUBLIC'){
+        messageContent = `Wait for someone to accept your challenge.`
+      }else{
+        messageContent = `Share the challengeId with whomever you want to challenge.`
       }
-
-      const baseHref = process.env.baseHref ?? "http://localhost:3000"
-
-     try{
-      await axios.post(`${baseHref}/api/chess/db-queries`, {
-        body : challengeJson
-      },{
-        headers: {
-          'Content-Type': 'application/json'
-        }
+        const message = await client.messages.create({
+          body: `Challenge created successfully with challengeId - ${challengeId}.\n \n ${messageContent}`,
+          from: twilioPhoneNumber,
+          to: phoneNumber,
       });
-     } catch(err){
-      throw `Error while saving to db - ${err}`
-     }
-  
-      /**
-       * returning a `CompletedAction` allows you to update the
-       * blink metadata but not allow the user to perform any
-       * follow on actions or user input
-       *
-       * you can update any of these details
-       */
+      }
+      
       const payload: CompletedAction = {
         type: "completed",
         title: "Challenge successfully created!",

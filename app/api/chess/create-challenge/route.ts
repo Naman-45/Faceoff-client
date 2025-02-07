@@ -38,7 +38,7 @@ export const GET = async () => {
       { 
         type: "transaction",
         label: "Create", // button text
-        href: `${baseHref}/api/chess/create-challenge?amount={amount}&username={username}&challengeType={challengeType}`,
+        href: `${baseHref}/api/chess/create-challenge?amount={amount}&username={username}&challengeType={challengeType}&phoneNumber={phoneNumber}`,
         parameters: [{
           name: "username",
           label: "Enter your ingame username.",
@@ -65,7 +65,13 @@ export const GET = async () => {
               value: "Private",
             }
           ],
-        }]
+        },
+        {
+          name: "phoneNumber",
+          label: "Enter phone number to recieve updates",
+          type: "number"
+        }
+      ],        
       } ]
 
     const payload: ActionGetResponse = {
@@ -108,6 +114,7 @@ export const POST = async (req: Request) => {
     const amount = searchParams.get('amount');
     const username = searchParams.get('username');
     const challengeType = searchParams.get('challengeType') ?? 'Public';
+    const phoneNumber = searchParams.get('phoneNumber') ?? null;
 
     const validChallengeTypes = ["PUBLIC", "PRIVATE"];
     const challengeTypeUpper = challengeType.toUpperCase();
@@ -204,12 +211,12 @@ export const POST = async (req: Request) => {
         type: "transaction",
         transaction,
         message: message,
-        // links: {
-        //   next: {
-        //     type: "post",
-        //     href: `/api/chess/create-challenge/next-action?challengeId=${challengeId}&amount=${amount}&username=${username}&challengeType=${challengeType}`,
-        //   },
-        // },
+        links: {
+          next: {
+            type: "post",
+            href: `/api/chess/create-challenge/next-action?challengeId=${challengeId}&amount=${amount}&username=${username}&challengeType=${challengeTypeUpper}&phoneNumber=${phoneNumber}`,
+          },
+        },
       },
     });
 

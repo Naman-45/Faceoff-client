@@ -7,31 +7,27 @@ import {
   import { clusterApiUrl, Connection, PublicKey } from "@solana/web3.js";
   import dotenv from 'dotenv';
   import { PrismaClient } from '@prisma/client';
+  import twilio from "twilio";
 
   const prisma = new PrismaClient();
 
   dotenv.config();
+
+  const accountSid = process.env.TWILIO_ACCOUNT_SID;
+  const authToken = process.env.TWILIO_AUTH_TOKEN;
+  const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
+
+  const client = twilio(accountSid, authToken);
   
-  // create the standard headers for this route (including CORS)
   const headers = createActionHeaders();
-  
-  /**
-   * since this endpoint is only meant to handle the callback request
-   * for the action chaining, it does not accept or process GET requests
-   */
+
   export const GET = async () => {
     return Response.json({ message: "Method not supported" } as ActionError, {
       status: 403,
       headers,
     });
   };
-  
-  /**
-   * Responding to OPTIONS request is still required even though we ignore GET requests
-   *
-   * DO NOT FORGET TO INCLUDE THE `OPTIONS` HTTP METHOD
-   * THIS WILL ENSURE CORS WORKS FOR BLINKS
-   */
+
   export const OPTIONS = async () => Response.json(null, { headers });
   
   export const POST = async (req: Request) => {
@@ -42,7 +38,9 @@ import {
       const { searchParams } = new URL(req.url);
       const challengeId = searchParams.get('challengeId') ?? '';
       const username = searchParams.get('username');
-  
+      const opponentPhoneNumber = searchParams.get('opponentPhoneNumber');
+      const creatorPhoneNumber = searchParams.get('creatorPhoneNumber');
+
       let account: PublicKey;
       try {
         account = new PublicKey(body.account);
@@ -76,32 +74,31 @@ import {
             throw "Unable to confirm the transaction";
           }
         }
-  
-        // todo: check for a specific confirmation status if desired
-        // if (status.value?.confirmationStatus != "confirmed")
+
       } catch (err) {
         if (typeof err == "string") throw err;
         throw "Unable to confirm the provided signature";
       }
-  
-      /**
-       * !TAKE CAUTION!
-       *
-       * since any client side request can access this public endpoint,
-       * a malicious actor could provide a valid signature that does NOT
-       * perform the previous action's transaction.
-       *
-       * todo: validate this transaction is what you expected the user to perform in the previous step
-       */
-  
-      // manually get the transaction to process and verify it
+
       const transaction = await connection.getParsedTransaction(
         signature,
         "confirmed",
       );
-  
-      console.log("transaction: ", transaction);
-
+      
+      if(opponentPhoneNumber){
+          const message = await client.messages.create({
+            body: `You have successfully joined the challenge. \n \n ChallengeId - ${challengeId}.`,
+            from: twilioPhoneNumber,
+            to: opponentPhoneNumber,
+        });
+      }
+      if(creatorPhoneNumber){
+        const message = await client.messages.create({
+          body: `${username} joined your challenge having challengeId - ${challengeId}.`,
+          from: twilioPhoneNumber,
+          to: creatorPhoneNumber
+        })
+      }
 
     await prisma.challenge.update({
         where : {
@@ -110,24 +107,18 @@ import {
         data: {
             status: "ACCEPTED",
             opponentPublicKey: body.account,
-            opponentUsername: username
+            opponentUsername: username,
+            opponentPhoneNumber: Number(opponentPhoneNumber)
         }
     })
   
-      /**
-       * returning a `CompletedAction` allows you to update the
-       * blink metadata but not allow the user to perform any
-       * follow on actions or user input
-       *
-       * you can update any of these details
-       */
       const payload: CompletedAction = {
         type: "completed",
         title: "Challenge joined successfully",
         icon: 'https://res.cloudinary.com/dxyexbgt6/image/upload/v1738417677/challenge-joined-successfully_zzam4f.jpg',
         label: "Complete!",
         description:
-          `You have now successfully joined Chess challenge, now play the match and settle the wager.` +
+          `You have now successfully joined the challenge against ${username},Play the match and settle the wager.` +
           `\n Here was the signature from the last action's transaction:\n ${signature} \n and this is the challengeId -\n ${challengeId} `,
       };
       return Response.json(payload, {
