@@ -12,7 +12,6 @@ import dotenv from 'dotenv';
 import { 
   Connection, 
   PublicKey, 
-  LAMPORTS_PER_SOL, 
   clusterApiUrl, 
   TransactionInstruction, 
   VersionedTransaction,
@@ -51,6 +50,11 @@ export const GET = async () => {
           type: "number"
         },
         {
+          name: "phoneNumber",
+          label: "Enter phone number to recieve updates",
+          type: "number"
+        },
+        {
           name: "challengeType",
           label: "Choose Challenge Type",
           type: "radio",
@@ -65,11 +69,6 @@ export const GET = async () => {
               value: "Private",
             }
           ],
-        },
-        {
-          name: "phoneNumber",
-          label: "Enter phone number to recieve updates",
-          type: "number"
         }
       ],        
       } ]
@@ -77,7 +76,7 @@ export const GET = async () => {
     const payload: ActionGetResponse = {
       type: "action",
       title: "Create Chess Wager",
-      icon: 'https://images.unsplash.com/photo-1611725088431-2528430c585e?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OHx8Y2hlc3N8ZW58MHx8MHx8fDA%3D',
+      icon: 'https://imgs.search.brave.com/VmrYdxckKlGtsohCKcRm1aDHxFrMkGim0w_gma4B18o/rs:fit:500:0:0:0/g:ce/aHR0cHM6Ly9tZWRp/YS5nZXR0eWltYWdl/cy5jb20vaWQvMTcx/MjQ5MTUwL3Bob3Rv/L2NoZXNzLmpwZz9z/PTYxMng2MTImdz0w/Jms9MjAmYz1WSUp1/WHlZbWFicnJ6Qkl0/TU1JYTcwR01uNzc4/cUlLakxfRkszdURL/N3RFPQ',
       description: "Play a quick blitz match and lets see who comes out on top over the board 😎.",
       label: "Wager", // this value will be ignored since `links.actions` exists
       links: {
@@ -180,7 +179,8 @@ export const POST = async (req: Request) => {
       creatorUsername: username,
       wagerAmount: amount,
       creatorPublicKey: body.account,
-      challengeType: challengeTypeUpper
+      challengeType: challengeTypeUpper,
+      creatorPhoneNumber: phoneNumber
     }
 
     const baseHref = process.env.baseHref ?? "http://localhost:3000"
@@ -197,7 +197,7 @@ export const POST = async (req: Request) => {
         }
       );
     } catch (err) {
-      console.log("Full axios error:", err);  // Add this log
+      console.log("Full axios error:", err);
       throw `Error while saving to db - ${err}`
     }
 
