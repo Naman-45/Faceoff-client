@@ -13,14 +13,13 @@ import { Reclaim } from "../reclaim";
 const { ReclaimClient } = require('@reclaimprotocol/zk-fetch');
 import { verifyProof, transformForOnchain } from "@reclaimprotocol/js-sdk";
 import { TOKEN_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/utils/token";
+import dotenv from 'dotenv';
+dotenv.config();
 
-const ChessWebAPI = require('chess-web-api');
-
-const client = new ReclaimClient('0xD8A3819B6014015C2dAC28d17D82f5D9A01Eb01A', '0x9ffa5d70471c31e69bfbd24d7d7ad8de0c5a9253d3c050c5d94e70ab3f89215a');
+const client = new ReclaimClient(process.env.RECLAIM_APP_ID, process.env.RECLAIM_APP_SECRET);
 
 const IDL = require('@/app/api/chess/reclaim.json');
 
-// create the standard headers for this route (including CORS)
 const headers = createActionHeaders();
 
 export const GET = async (req: Request) => {
@@ -96,10 +95,8 @@ export const POST = async (req: Request) => {
       const url = `https://api.chess.com/pub/player/${challenge.creatorUsername}/games/${currentYear}/${monthStr}`;
       
       // First, let's fetch and log the raw games data
-      console.log('Fetching games from:', url);
       const rawResponse = await fetch(url);
       const rawData = await rawResponse.json();
-      console.log('Number of games found:', rawData.games?.length || 0);
       
       // Find the first valid game between the players after wager creation
       const validGame = rawData.games?.find((game: any) => {
@@ -115,15 +112,6 @@ export const POST = async (req: Request) => {
         throw new Error("No valid game found between the players after wager creation");
       }
 
-      console.log('\nFound valid game:', {
-        white: validGame.white.username,
-        black: validGame.black.username,
-        endTime: new Date(validGame.end_time * 1000).toISOString()
-      });
-
-      // Create response template based on the valid game
-      const gameJson = JSON.stringify(validGame);
-      
       const responseMatches = [
         {
           type: "regex",

@@ -110,7 +110,7 @@ export const POST = async (req: Request) => {
 
       const instruction = await program.methods.joinChallenge(
         challengeId,
-        new BN(amount * LAMPORTS_PER_SOL)
+        new BN(amount)
       ).accounts({
         opponent: signer,
         tokenMint: usdc_mint,
