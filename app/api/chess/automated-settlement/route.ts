@@ -20,8 +20,6 @@ const wallet = new Wallet(keypair);
 
 const provider = new AnchorProvider(connection, wallet);
 
-const chessAPI = new ChessWebAPI();
-
 const program = new Program<Reclaim>(IDL, provider);
 
 async function checkAndSettleWagers() {
@@ -40,12 +38,10 @@ async function checkAndSettleWagers() {
               const monthStr = currentMonth < 10 ? `0${currentMonth}` : currentMonth.toString();
               
               const url = `https://api.chess.com/pub/player/${challenge.creatorUsername}/games/${currentYear}/${monthStr}`;
-              
-              // First, let's fetch and log the raw games data
+
               const rawResponse = await fetch(url);
               const rawData = await rawResponse.json();
-              
-              // Find the first valid game between the players after wager creation
+ 
               const validGame = rawData.games?.find((game: any) => {
                 const isValidPlayers = (
                   (game.white.username === challenge.creatorUsername && game.black.username === challenge.opponentUsername) ||
@@ -92,18 +88,14 @@ async function checkAndSettleWagers() {
               console.error('Error getting game proof:', error);
               throw error;
             }  
-          
-              const connection = new web3.Connection(process.env.RPC_URL ?? clusterApiUrl('devnet'), "confirmed");
-        
-              const program: Program<Reclaim> = new Program(IDL,{connection});
-        
+               
               const usdc_mint = new PublicKey('4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU');
               const creatorPublicKey = new PublicKey(challenge.creatorPublicKey);
               const opponentPublicKey = new PublicKey(challenge.opponentPublicKey);
         
               let ixs: TransactionInstruction[] = [];
               const instruction = await program.methods.settleWager(
-                challengeId,
+                challenge.challengeId,
                 proofData
               ).accounts({
                 signer: keypair.publicKey,
@@ -135,4 +127,5 @@ async function checkAndSettleWagers() {
 }
 
 checkAndSettleWagers();
+
 // setInterval(checkAndSettleWagers, 60000); // Runs every minute
