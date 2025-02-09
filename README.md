@@ -10,9 +10,9 @@ Faceoff is a trustless system that allows players to bet on chess matches. It in
 ---
 
 ## 📸 **Screenshots & Architecture**  
-![HERO section]('https://res.cloudinary.com/dxyexbgt6/image/upload/v1739134686/Screenshot_From_2025-02-10_02-20-23_e2sngv.png')
+![HERO section](https://res.cloudinary.com/dxyexbgt6/image/upload/v1739134686/Screenshot_From_2025-02-10_02-20-23_e2sngv.png)
 
-![Join Public/private challenge!]('https://res.cloudinary.com/dxyexbgt6/image/upload/v1739134683/Screenshot_From_2025-02-10_02-23-27_n4ivcl.png')
+![Join Public/private challenge!](https://res.cloudinary.com/dxyexbgt6/image/upload/v1739134683/Screenshot_From_2025-02-10_02-23-27_n4ivcl.png)
 
 ---
 
