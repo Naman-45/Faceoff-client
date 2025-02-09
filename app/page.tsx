@@ -1,11 +1,11 @@
 import Link from "next/link"
 import { ArrowRight } from "lucide-react"
-import { Button } from "@/components/button"
+import { Button } from "@/components/ui/button"
 
 export default function Home() {
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
-      <h1 className="text-4xl font-bold text-gray-800 mb-8">Welcome to P2P Wager</h1>
+      <h1 className="text-4xl font-bold text-gray-800 mb-8">Welcome to Faceoff!</h1>
       <div className="grid gap-6 w-full max-w-md">
         <Link href="/join-challenge" className="w-full">
           <Button className="w-full" variant="primary">

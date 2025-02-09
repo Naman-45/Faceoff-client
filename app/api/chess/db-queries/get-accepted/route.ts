@@ -5,24 +5,24 @@ const prisma = new PrismaClient();
 
 export async function GET(req: NextRequest) {
     try {
-      const pendingChallenges = await prisma.challenge.findMany({
+      const acceptedChallenges = await prisma.challenge.findMany({
         where: {
-          status: 'PENDING',
+          status: 'ACCEPTED',
         },
       });
   
-      if (!pendingChallenges || pendingChallenges.length === 0) {
+      if (!acceptedChallenges || acceptedChallenges.length === 0) {
         return NextResponse.json(
-          { error: "No pending challenges found" },
+          { error: "No accepted challenges found" },
           { status: 404 }
         );
       }
   
-      return NextResponse.json(pendingChallenges, { status: 200 });
+      return NextResponse.json(acceptedChallenges, { status: 200 });
     } catch (error) {
-      console.error("Error fetching pending challenges:", error);
+      console.error("Error fetching accepted challenges:", error);
       return NextResponse.json(
-        { error: "Failed to fetch pending challenges" },
+        { error: "Failed to fetch accepted challenges" },
         { status: 500 }
       );
     }

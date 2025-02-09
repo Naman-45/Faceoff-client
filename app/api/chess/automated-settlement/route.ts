@@ -24,7 +24,7 @@ const program = new Program<Reclaim>(IDL, provider);
 
 async function checkAndSettleWagers() {
     try {
-        const pendingChallenges = await axios.get(`${process.env.baseHref}/api/chess/db-queries/get-pending`);
+        const pendingChallenges = await axios.get(`${process.env.baseHref}/api/chess/db-queries/get-accepted`);
         
         for (const challenge of pendingChallenges.data) {
 

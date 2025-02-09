@@ -1,7 +1,7 @@
 'use client'
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
-import {Button }from "@/components/button"
+import {Button }from "@/components/ui/button"
 import { useState } from "react";
 
 export default function SettleWager() {
