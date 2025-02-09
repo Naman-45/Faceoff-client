@@ -38,8 +38,8 @@ import {
       const { searchParams } = new URL(req.url);
       const challengeId = searchParams.get('challengeId') ?? '';
       const username = searchParams.get('username');
-      const opponentPhoneNumber = searchParams.get('opponentPhoneNumber');
-      const creatorPhoneNumber = searchParams.get('creatorPhoneNumber');
+      let opponentPhoneNumber = searchParams.get('opponentPhoneNumber');
+      let creatorPhoneNumber = searchParams.get('creatorPhoneNumber');
 
       let account: PublicKey;
       try {
@@ -86,6 +86,7 @@ import {
       );
       
       if(opponentPhoneNumber){
+        opponentPhoneNumber = `+91${opponentPhoneNumber}`;
           const message = await client.messages.create({
             body: `You have successfully joined the challenge. \n \n ChallengeId - ${challengeId}.`,
             from: twilioPhoneNumber,
@@ -93,6 +94,7 @@ import {
         });
       }
       if(creatorPhoneNumber){
+        creatorPhoneNumber = `+91${creatorPhoneNumber}`;
         const message = await client.messages.create({
           body: `${username} joined your challenge having challengeId - ${challengeId}.`,
           from: twilioPhoneNumber,
@@ -108,7 +110,7 @@ import {
             status: "ACCEPTED",
             opponentPublicKey: body.account,
             opponentUsername: username,
-            opponentPhoneNumber: Number(opponentPhoneNumber)
+            opponentPhoneNumber: opponentPhoneNumber
         }
     })
   

@@ -38,7 +38,7 @@ import {
       const { searchParams } = new URL(req.url);
       const challengeId = searchParams.get('challengeId');
       const challengeType = searchParams.get('challengeType');
-      const phoneNumber = searchParams.get('phoneNumber');
+      let phoneNumber = searchParams.get('phoneNumber');
 
       let account: PublicKey;
       try {
@@ -100,13 +100,7 @@ import {
         if (typeof err == "string") throw err;
         throw "Unable to confirm the provided signature";
       }
-
-      const transaction = await connection.getParsedTransaction(
-        signature,
-        "confirmed",
-      );
-
-
+      
       if(phoneNumber){
       let messageContent: string;
       if(challengeType == 'PUBLIC'){
@@ -114,6 +108,7 @@ import {
       }else{
         messageContent = `Share the challengeId with whomever you want to challenge.`
       }
+        phoneNumber = `+91${phoneNumber}`;
         const message = await client.messages.create({
           body: `Challenge created successfully with challengeId - ${challengeId}.\n \n ${messageContent}`,
           from: twilioPhoneNumber,
@@ -124,7 +119,7 @@ import {
       const payload: CompletedAction = {
         type: "completed",
         title: "Challenge successfully created!",
-        icon: 'https://images.unsplash.com/photo-1611725088431-2528430c585e?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OHx8Y2hlc3N8ZW58MHx8MHx8fDA%3D',
+        icon: 'https://imgs.search.brave.com/VmrYdxckKlGtsohCKcRm1aDHxFrMkGim0w_gma4B18o/rs:fit:500:0:0:0/g:ce/aHR0cHM6Ly9tZWRp/YS5nZXR0eWltYWdl/cy5jb20vaWQvMTcx/MjQ5MTUwL3Bob3Rv/L2NoZXNzLmpwZz9z/PTYxMng2MTImdz0w/Jms9MjAmYz1WSUp1/WHlZbWFicnJ6Qkl0/TU1JYTcwR01uNzc4/cUlLakxfRkszdURL/N3RFPQ',
         label: "Complete!",
         description:
           `You have now successfully created Chess challenge ` +

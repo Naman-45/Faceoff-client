@@ -21,6 +21,7 @@ import { Reclaim } from "../reclaim";
 import { BN,  Program } from "@coral-xyz/anchor";
 import axios from "axios";
 import { TOKEN_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/utils/token";
+import { createChallengeSchema, createChallengeType } from "./types";
 let ChessWebAPI = require('chess-web-api');
 
 const IDL = require('@/app/api/chess/reclaim.json');
@@ -140,6 +141,19 @@ export const POST = async (req: Request) => {
 
     const chessAPI = new ChessWebAPI();
 
+    const amountNumber = Number(amount);
+
+    const parsedInput = createChallengeSchema.safeParse({
+      username,
+      amount: amountNumber,
+      phoneNumber,
+      challengeType
+    });
+
+    if(!parsedInput.success){
+      throw `Runtime validation failed with error - ${parsedInput.error.message}`
+    }
+
     try {
       const response = await chessAPI.getPlayer(username);
     } catch (err: any) {
@@ -155,7 +169,7 @@ export const POST = async (req: Request) => {
 
     const instruction = await program.methods.createChallenge(
       challengeId,
-      new BN(Number(amount))
+      new BN(Number(amount) * 1000000)
     ).accounts({
       creator: signer,
       tokenMint: usdc_mint,
@@ -204,7 +218,7 @@ export const POST = async (req: Request) => {
     const simResult = await connection.simulateTransaction(transaction);
     console.log("Simulation result:", simResult);
 
-    const message = `Your challenge has been created successfully!\nJoin with challengeId: ${challengeId}`;
+    const message = `Challenge created Successfully 🎉!`;
 
     const payload: ActionPostResponse = await createPostResponse({
       fields: {

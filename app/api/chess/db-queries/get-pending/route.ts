@@ -5,7 +5,6 @@ const prisma = new PrismaClient();
 
 export async function GET(req: NextRequest) {
     try {
-      // Fetch all pending challenges
       const pendingChallenges = await prisma.challenge.findMany({
         where: {
           status: 'PENDING',

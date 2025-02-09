@@ -55,11 +55,8 @@ import {
       try {
         const status = await connection.getSignatureStatus(signature);
   
-        console.log("signature status:", status);
-  
         if (!status) throw "Unknown signature status";
-  
-        // only accept `confirmed` and `finalized` transactions
+
         if (status.value?.confirmationStatus) {
           if (
             status.value.confirmationStatus != "confirmed" &&
@@ -78,9 +75,6 @@ import {
         signature,
         "confirmed",
       );
-  
-      console.log("transaction: ", transaction);
-
 
     await prisma.challenge.update({
         where : {

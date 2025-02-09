@@ -9,7 +9,6 @@ import {
 import { 
     clusterApiUrl, 
     Connection, 
-    LAMPORTS_PER_SOL, 
     PublicKey, 
     Transaction 
 } from "@solana/web3.js";
@@ -18,6 +17,10 @@ import { Reclaim } from "../reclaim";
 import { BN, Program } from "@coral-xyz/anchor";
 import axios from "axios";
 import { TOKEN_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/utils/token";
+import { joinChallengeSchema } from "./types";
+import { parse } from "path";
+
+let ChessWebAPI = require('chess-web-api');
 
 const IDL = require('@/app/api/chess/reclaim.json');
 
@@ -93,6 +96,23 @@ export const POST = async (req: Request) => {
          throw "Invalid challengeId provided";
       }
 
+      const parsedInput = joinChallengeSchema.safeParse({
+        username,
+        phoneNumber: opponentPhoneNumber
+      })
+
+      if(!parsedInput.success){
+        throw `Runtime validation failed with error - ${parsedInput.error.message}`;
+      }
+
+      const chessAPI = new ChessWebAPI();
+
+      try {
+        const response = await chessAPI.getPlayer(username);
+      } catch (err: any) {
+        throw `Username- ${err.message}`;
+      }
+
       const response = await axios.get(`${process.env.baseHref}/api/chess/db-queries?challengeId=${challengeId}`);
 
       // Access the data from the response
@@ -114,7 +134,7 @@ export const POST = async (req: Request) => {
 
       const instruction = await program.methods.joinChallenge(
         challengeId,
-        new BN(amount)
+        new BN(amount * 1000000)
       ).accounts({
         opponent: signer,
         tokenMint: usdc_mint,
@@ -133,7 +153,7 @@ export const POST = async (req: Request) => {
         fields: {
             type: "transaction",
           transaction,
-          message: "Challenge joined successfully, play the game!",
+          message: "Challenge joined successfully 🎉!",
           links: {
             next: {
               type: "post",
