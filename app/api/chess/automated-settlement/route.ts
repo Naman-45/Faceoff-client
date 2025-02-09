@@ -1,16 +1,14 @@
-import { clusterApiUrl, Connection, Keypair, PublicKey, TransactionInstruction, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
+import {  Connection, Keypair, PublicKey, TransactionInstruction, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
 import { AnchorProvider,web3, Program, Wallet } from "@coral-xyz/anchor";
 import axios from "axios";
 import { Reclaim } from "../reclaim";
-import dotenv from "dotenv";
 import { TOKEN_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/utils/token";
 import { verifyProof, transformForOnchain } from "@reclaimprotocol/js-sdk";
 const { ReclaimClient } = require('@reclaimprotocol/zk-fetch');
+import { PrismaClient } from '@prisma/client';
 
-const ChessWebAPI = require('chess-web-api');
+const prisma = new PrismaClient();
 const client = new ReclaimClient(process.env.RECLAIM_APP_ID, process.env.RECLAIM_APP_SECRET);
-
-dotenv.config();
 
 const IDL = require("@/app/api/chess/reclaim.json");
 
@@ -24,7 +22,7 @@ const program = new Program<Reclaim>(IDL, provider);
 
 async function checkAndSettleWagers() {
     try {
-        const pendingChallenges = await axios.get(`${process.env.baseHref}/api/chess/db-queries/get-accepted`);
+        const pendingChallenges = await axios.get(`/api/chess/db-queries/get-accepted`);
         
         for (const challenge of pendingChallenges.data) {
 
@@ -119,7 +117,23 @@ async function checkAndSettleWagers() {
           
             transaction.sign([keypair]);            
 
-            const txid = await connection.sendTransaction(transaction);
+            const signature = await connection.sendTransaction(transaction);
+            
+            const status = await connection.getSignatureStatus(signature, {
+              searchTransactionHistory: true
+            });
+      
+            if (status.value?.confirmationStatus === 'confirmed' || 
+                status.value?.confirmationStatus === 'finalized') {
+              await prisma.challenge.update({
+                where: {
+                  challengeId: challenge.challengeId
+                },
+                data: {
+                  status: 'COMPLETED'
+                }
+              })
+            }
         }
         } catch (error) {
         console.error("Error processing wagers:", error);

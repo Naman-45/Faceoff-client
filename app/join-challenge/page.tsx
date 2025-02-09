@@ -23,26 +23,24 @@ export default function JoinChallenge() {
       try {
         const response = await axios.get(`/api/chess/db-queries/get-all-public-challenges`);
         
-        // Ensure all async operations are resolved before setting state
         const challengeData = await Promise.all(
           response.data.map(async (challenge: any) => {
             try {
               const chessResponse = await axios.get(`https://api.chess.com/pub/player/${challenge.creatorUsername}/stats`);
               const blitz_rating = chessResponse.data.chess_blitz.last.rating;
               return {
-                id: challenge.id,  // Ensure this is unique
+                id: challenge.id, 
                 challengerUsername: challenge.creatorUsername,
                 blitzRating: blitz_rating,
                 wagerAmount: challenge.wagerAmount
               };
             } catch (error) {
               console.error(`Error fetching blitz rating for ${challenge.creatorUsername}:`, error);
-              return null; // Skip challenges with failed fetch
+              return null;
             }
           })
         );
 
-        // Filter out null values (failed API calls)
         setPublicChallenges(challengeData.filter(challenge => challenge !== null));
       } catch (error) {
         console.error("Error fetching challenges:", error);
